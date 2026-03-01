@@ -1,3 +1,6 @@
+3.1.0
+* Retail: Show Buffs option is back! We are at Blizzards mercy on what buffs they allow to be non-secret-values.
+
 3.0.7
 * Retail: Updated ToC
 

@@ -129,6 +129,60 @@
 			<Attribute name="type1" value="target" />
 		</Attributes>
 		<Frames>
+			<Frame name="$parent_Buff1" inherits="TargetBuffFrameTemplate">
+				<Anchors>
+					<Anchor point="RIGHT" relativePoint="LEFT">
+						<Offset>
+							<AbsDimension x="-2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Frame>
+			<Frame name="$parent_Buff2" inherits="TargetBuffFrameTemplate">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff1">
+						<Offset>
+							<AbsDimension x="-2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>	
+			</Frame>			
+			<Frame name="$parent_Buff3" inherits="TargetBuffFrameTemplate">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff2">
+						<Offset>
+							<AbsDimension x="-2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>				
+			</Frame>						
+			<Frame name="$parent_Buff4" inherits="TargetBuffFrameTemplate">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff3">
+						<Offset>
+							<AbsDimension x="-2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>				
+			</Frame>						
+			<Frame name="$parent_Buff5" inherits="TargetBuffFrameTemplate">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff4">
+						<Offset>
+							<AbsDimension x="-2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>				
+			</Frame>				
+			<Frame name="$parent_Buff6" inherits="TargetBuffFrameTemplate">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff5">
+						<Offset>
+							<AbsDimension x="-2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>	
+			</Frame>						
 			<StatusBar parentKey="HealthBar" minValue="0" maxValue="100" defaultValue="100">
 				<Size x="111" y="24"/>
 				<Anchors>

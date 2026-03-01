@@ -106,6 +106,11 @@ local function ClassColorCheck_OnClick(frame)
 	Healium_UpdateClassColors()
 end
 
+local function ShowBuffsCheck_OnClick(frame)
+	Healium.ShowBuffs = frame:GetChecked() or false
+	Healium_UpdateShowBuffs()
+end
+
 local function RangeCheckCheck_OnClick(frame)
 	Healium.DoRangeChecks = frame:GetChecked() or false
 end
@@ -629,6 +634,18 @@ function Healium_CreateConfigPanel(Class, Version)
     
     RangeCheckSlider:SetScript("OnValueChanged", RangeCheckSlider_OnValueChanged)
 	
+	
+	-- ShowBuffs check
+	local ShowBuffsCheck = CreateFrame("CheckButton","$parentShowBuffsCheckButton",scrollchild,"ChatConfigCheckButtonTemplate")
+    ShowBuffsCheck:SetPoint("TOPLEFT",RangeCheckCheck, "BOTTOMLEFT", 0, 0)
+    ShowBuffsCheck.tooltipText = "Shows the buffs and HOTs you have personally cast on the player to the left of the healthbar.  It will only show spells that are configured in " .. Healium_AddonColoredName .. "."
+	
+    ShowBuffsCheck.Text = ShowBuffsCheck:CreateFontString(nil, "BACKGROUND","GameFontNormal")
+    ShowBuffsCheck.Text:SetPoint("LEFT", ShowBuffsCheck, "RIGHT", 0)
+    ShowBuffsCheck.Text:SetText("Show Buffs")
+	ShowBuffsCheck:SetScript("OnClick", ShowBuffsCheck_OnClick);
+	
+	
     -- About Frame
     local AboutTitle = CreateFrame("Frame","",scrollchild)
 --    AboutTitle:SetFrameStrata("TOOLTIP")
@@ -636,7 +653,7 @@ function Healium_CreateConfigPanel(Class, Version)
     AboutTitle:SetHeight(20)
     
     AboutTitle.Text = AboutTitle:CreateFontString(nil, "BACKGROUND","GameFontNormalLarge")
-    AboutTitle.Text:SetPoint("TOPLEFT",RangeCheckCheck, "BOTTOMLEFT", 0, -40)
+    AboutTitle.Text:SetPoint("TOPLEFT",ShowBuffsCheck, "BOTTOMLEFT", 0, -40)
     AboutTitle.Text:SetText("About " .. Healium_AddonColoredName)
     
     local AboutFrame = CreateFrame("Frame","AboutHealium",scrollchild,BackdropTemplateMixin and "BackdropTemplate")
@@ -667,6 +684,7 @@ function Healium_CreateConfigPanel(Class, Version)
 	ShowManaCheck:SetChecked(Healium.ShowMana)
 	ClassColorCheck:SetChecked(Healium.UseClassColors)
 	RangeCheckCheck:SetChecked(Healium.DoRangeChecks)
+	ShowBuffsCheck:SetChecked(Healium.ShowBuffs)	
 	EnableCooldownsCheck:SetChecked(Healium.EnableCooldowns)	
 	HideCloseButtonCheck:SetChecked(Healium.HideCloseButton)
 	HideCaptionsCheck:SetChecked(Healium.HideCaptions)

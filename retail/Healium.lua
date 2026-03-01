@@ -57,7 +57,7 @@ local HealiumDefaults = {
   ShowTanksFrame = false,						-- Whether or not to show the Tanks frame
   ShowTargetFrame = false,						-- Whether or not to show the target frame
   ShowFocusFrame = false,						-- Whether or not to show the focus frame
-  --ShowBuffs = true,								-- Whether or not to show your own buffs, that are configured in Healium to the left of the healthbar
+  ShowBuffs = true,								-- Whether or not to show your own buffs, that are configured in Healium to the left of the healthbar
   HideCloseButton = false,						-- Whether or not to hide the close (X) button, to prevent accidental closing of the Healium Frame
   HideCaptions = false,							-- Whether or not to hide the caption when the mouse leaves the caption area
   LockFrames = false,							-- Whether or not to prevent dragging of the frame
@@ -410,6 +410,14 @@ function Healium_UpdateManaBarVisibility(frame)
 	Healium_UpdateUnitHealth(frame.TargetUnit, frame)
 end
 
+function Healium_UpdateShowBuffs()
+	for _, k in ipairs(Healium_ShownFrames) do
+		if (k.TargetUnit) then
+			Healium_UpdateUnitBuffs(k.TargetUnit, k)
+		end
+	end	
+end
+
 function Healium_UpdateUnitThreat(unitName, NamePlate)
 	if not NamePlate then return end
 	if not UnitExists(unitName) then return end
@@ -624,7 +632,7 @@ local function Healium_UpdateSpells()
 end
 
 -- does special checks for specific buffs/debuffs
---[[
+-- does special checks for specific buffs/debuffs
 function Healium_UpdateSpecialBuffs(unit)
 
 	if HealiumClass == "PRIEST" then 
@@ -665,9 +673,9 @@ function Healium_UpdateSpecialBuffs(unit)
 				local units = Healium_Units[unit]
 
 				if units then 	
-					local buff1 = AuraUtil.FindAuraByName(RejuvinationName, unit)
-					local buff2 = AuraUtil.FindAuraByName(RegrowthName, unit)
-					local buff3 = AuraUtil.FindAuraByName(WildGrowthName, unit)
+					local buff1 = RejuvinationName and RejuvinationName ~= "" and AuraUtil.FindAuraByName(RejuvinationName, unit)
+					local buff2 = RegrowthName and RegrowthName ~= "" and AuraUtil.FindAuraByName(RegrowthName, unit)
+					local buff3 = WildGrowthName and WildGrowthName ~= "" and AuraUtil.FindAuraByName(WildGrowthName, unit)
 
 					local enabled = buff1 or buff2 or buff3
 					
@@ -693,7 +701,8 @@ function Healium_UpdateSpecialBuffs(unit)
 	end	
 
 end
---]]
+
+
 -- Efficient cooldowns (Midnight-safe)
 --
 -- Midnight restricts direct use of cooldown start/duration/enabled values in combat ("secret values").
@@ -1085,16 +1094,17 @@ function Healium_OnEvent(frame, event, ...)
 		return
 	end
 	
-	--[[
 	if event == "UNIT_AURA" then
 		if Healium_Units[arg1] then
 			for _,v  in pairs(Healium_Units[arg1]) do
+				if Healium.ShowBuffs then 
+					Healium_UpdateUnitBuffs(arg1, v)
+				end
 				Healium_UpdateSpecialBuffs(arg1)
 			end
 		end
 		return
 	end
-	]]
 	
 	if (event == "UNIT_THREAT_SITUATION_UPDATE") and Healium.ShowThreat then
 		if Healium_Units[arg1] then
@@ -1238,6 +1248,7 @@ function Healium_OnEvent(frame, event, ...)
 		Healium_SetScale()		
 		Healium_UpdateClassColors()
 		Healium_UpdateShowMana()
+		Healium_UpdateShowBuffs()
 		Healium_UpdateFriends()
 		Healium_UpdateShowThreat()
 		Healium_UpdateShowRaidIcons()

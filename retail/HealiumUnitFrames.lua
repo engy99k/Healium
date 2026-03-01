@@ -21,6 +21,7 @@ local GroupFramesWasShown = { }
 local TargetFrameWasShown = nil
 local FocusFrameWasShown = nil
 
+local MaxBuffs = 6
 local xSpacing = 2
 local NamePlateHeight = 28
 
@@ -394,6 +395,21 @@ function HealiumUnitFrames_Button_OnLoad(frame)
 		ClickCastFrames[frame] = true	
 	end
 
+	-- configure buff frames
+	frame.buffs = { }	
+
+	local framename = frame:GetName()	
+	for i=1, MaxBuffs, 1 do
+		local buffframe = _G[framename.."_Buff"..i]
+		local name = buffframe:GetName()
+		buffframe.icon = _G[name.."Icon"]
+		buffframe.cooldown = _G[name.."Cooldown"]
+		buffframe.count = _G[name.."Count"]
+		buffframe.border = _G[name.."Border"]
+		buffframe.id = i
+		frame.buffs[i] = buffframe
+	end
+
 	local framename = frame:GetName()	
 
 	if InCombatLockdown() then
@@ -445,6 +461,9 @@ function HealiumUnitFrames_Button_OnAttributeChanged(frame, name, value)
 			
 			table.insert(Healium_Units[newUnit], frame)
 
+			for i =1, MaxBuffs, 1 do
+				frame.buffs[i].unit = newUnit
+			end
 			
 			Healium_UpdateManaBarVisibility(frame) -- This is important to do here.
 			Healium_UpdateUnitName(newUnit, frame)
@@ -822,14 +841,64 @@ function Healium_MakeRankedSpellName(spellName, spellSubtext)
 	return rankedSpellName
 end
 
-local function FindAuraInstanceID(auras, spellId)
-	for i,j in pairs(auras) do
-		if (spellId == j.spellId) and (j.sourceUnit == "player")  then 
-			return j.auraInstanceID
+function Healium_UpdateUnitBuffs(unit, frame)
+	local buffIndex = 1
+	local Profile = Healium_GetProfile()
+
+	if Healium.ShowBuffs then
+		for i=1, 100, 1 do
+			local aura = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL|PLAYER")
+			if aura then 
+				if not issecretvalue(aura.name) then
+					local name = aura.name
+					local armed = false
+					
+					for j=1, Profile.ButtonCount, 1 do
+						if Profile.SpellNames[j] == name or name == RejuvenationGermination or name == EternalFlame or name == Atonement or name == GlimmerOfLight or name == Tranquility or name == TemporalBeaconName then
+							armed = true
+							break
+						end
+					end
+					
+					if armed == true then
+						local buffFrame = frame.buffs[buffIndex]
+
+						buffFrame:SetID(i)
+						buffFrame.auraInstanceID = aura.auraInstanceID
+						buffFrame.icon:SetTexture(aura.icon)
+
+						if aura.applications and aura.applications > 1 then
+							buffFrame.count:SetText(aura.applications)
+							buffFrame.count:Show()
+						else
+							buffFrame.count:Hide()
+						end
+						
+						if aura.duration and aura.duration > 0 then
+							local startTime = aura.expirationTime - aura.duration
+							buffFrame.cooldown:SetCooldown(startTime, aura.duration)
+							buffFrame.cooldown:Show()
+						else
+							buffFrame.cooldown:Hide()
+						end
+						
+						buffFrame:Show()
+						buffIndex = buffIndex + 1					
+						if buffIndex > MaxBuffs then
+							break
+						end			
+					end
+				end
+			else
+				break
+			end
 		end
-	end	
-	
-	return nil
+	end
+
+	-- hide remainder frames
+	for i = buffIndex, MaxBuffs, 1 do
+		frame.buffs[i]:Hide()
+	end
 end
 
 function Healium_ManaStatusBar_OnLoad(frame)
