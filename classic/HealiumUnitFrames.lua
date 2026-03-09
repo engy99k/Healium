@@ -342,7 +342,7 @@ function HealiumUnitFrames_OnLeave(frame)
 end
 
 function HealiumUnitFrames_OnMouseDown(frame, button)
-	if button == "LeftButton" and not Healium.LockFrames then
+	if button == "LeftButton" and not Healium.LockFrames and not InCombatLockdown() then
 		frame:StartMoving()	
 	end
 	
@@ -352,13 +352,9 @@ function HealiumUnitFrames_OnMouseDown(frame, button)
 end
 
 function HealiumUnitFrames_OnMouseUp(frame, button)
-	if button == "LeftButton" then
+	if button == "LeftButton" and not InCombatLockdown() then
 		frame:StopMovingOrSizing()	
 	end
-	
-	if button == "RightButton" then
-	
-	end	
 end
 
 function HealiumUnitFrames_ShowHideFrame(frame, show)

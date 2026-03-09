@@ -273,7 +273,9 @@ local function RangeCheckSlider_OnValueChanged(frame)
 end
 
 function Healium_ShowConfigPanel()
-	Settings.OpenToCategory(Healium_ConfigPanel_Category.ID)
+	if not InCombatLockdown() then
+		Settings.OpenToCategory(Healium_ConfigPanel_Category.ID)
+	end
 end
 
 

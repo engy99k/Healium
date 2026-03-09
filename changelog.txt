@@ -1,3 +1,7 @@
+3.1.1
+* All: Fixed LUA error when trying to move main Healium frame during combat.
+* All: Fixed LUA error when trying to show Healium config panel during combat.
+
 3.1.0
 * Retail: Show Buffs option is back! We are at Blizzards mercy on what buffs they allow to be non-secret-values.
 

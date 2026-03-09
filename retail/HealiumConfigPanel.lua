@@ -181,9 +181,10 @@ local function RangeCheckSlider_OnValueChanged(frame)
 end
 
 function Healium_ShowConfigPanel()
-	Settings.OpenToCategory(Healium_ConfigPanel_Category:GetID())
+	if not InCombatLockdown() then
+		Settings.OpenToCategory(Healium_ConfigPanel_Category.ID)
+	end
 end
-
 
 local function CreateCheck(checkName, scrollchild, parent, tip, text)
 	local check = CreateFrame("CheckButton", checkName,  scrollchild, "ChatConfigCheckButtonTemplate")
