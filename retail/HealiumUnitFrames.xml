@@ -129,7 +129,7 @@
 			<Attribute name="type1" value="target" />
 		</Attributes>
 		<Frames>
-			<Frame name="$parent_Buff1" inherits="TargetBuffFrameTemplate">
+			<Frame name="$parent_Buff1" inherits="TargetBuffFrameTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="RIGHT" relativePoint="LEFT">
 						<Offset>
@@ -138,7 +138,7 @@
 					</Anchor>
 				</Anchors>
 			</Frame>
-			<Frame name="$parent_Buff2" inherits="TargetBuffFrameTemplate">
+			<Frame name="$parent_Buff2" inherits="TargetBuffFrameTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff1">
 						<Offset>
@@ -147,7 +147,7 @@
 					</Anchor>
 				</Anchors>	
 			</Frame>			
-			<Frame name="$parent_Buff3" inherits="TargetBuffFrameTemplate">
+			<Frame name="$parent_Buff3" inherits="TargetBuffFrameTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff2">
 						<Offset>
@@ -156,7 +156,7 @@
 					</Anchor>
 				</Anchors>				
 			</Frame>						
-			<Frame name="$parent_Buff4" inherits="TargetBuffFrameTemplate">
+			<Frame name="$parent_Buff4" inherits="TargetBuffFrameTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff3">
 						<Offset>
@@ -165,7 +165,7 @@
 					</Anchor>
 				</Anchors>				
 			</Frame>						
-			<Frame name="$parent_Buff5" inherits="TargetBuffFrameTemplate">
+			<Frame name="$parent_Buff5" inherits="TargetBuffFrameTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff4">
 						<Offset>
@@ -174,7 +174,7 @@
 					</Anchor>
 				</Anchors>				
 			</Frame>				
-			<Frame name="$parent_Buff6" inherits="TargetBuffFrameTemplate">
+			<Frame name="$parent_Buff6" inherits="TargetBuffFrameTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff5">
 						<Offset>

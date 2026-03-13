@@ -1,3 +1,6 @@
+3.1.2
+* Retail: Fixed LUA error when mousing over buff frames area.
+
 3.1.1
 * All: Fixed LUA error when trying to move main Healium frame during combat.
 * All: Fixed LUA error when trying to show Healium config panel during combat.
