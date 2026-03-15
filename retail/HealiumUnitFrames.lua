@@ -29,6 +29,15 @@ local UnitFrames = { } -- table of all unit frames
 
 ClickCastFrames = ClickCastFrames or {} -- used by Clique and any other click cast frames
 
+-- locale safe versions of spell names
+local RejuvenationGermination = Healium_GetSpellName(155777) -- Rejuvenation (Germination) is a buff when a druid with the Germination talent casts Rejuvenation on a target
+local EternalFlame = Healium_GetSpellName(156322) -- Eternal Flame is a buff when a paladin with the Eternal Flame talent casts Word of Glory on a target
+local Atonement = Healium_GetSpellName(81749) -- Atonement: Plea, Power Word: Shield, Shadow Mend, and Power Word: Radiance also apply Atonement to your target for 15 sec.\
+local GlimmerOfLight = Healium_GetSpellName(325983) -- Glimmer of Light is a buff when a paladin with the Glimmer of Light talent casts Holy Shock
+local Tranquility = Healium_GetSpellName(740) -- Tranquility - HOT from Druid casting Tranquility
+local TemporalBeaconName = Healium_GetSpellName(400735) -- Temporal Beacon
+
+
 local function CreateButton(ButtonName,ParentFrame,xoffset)
 	local button = CreateFrame("Button", ButtonName, ParentFrame, "HealiumHealButtonTemplate")
 	button:SetPoint("LEFT", ParentFrame, "RIGHT", xoffset, 0)

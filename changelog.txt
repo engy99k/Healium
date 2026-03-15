@@ -1,3 +1,6 @@
+3.1.3
+* Retail: Fixed some special buffs not showing in Healium like Rejuvination (Germination)
+
 3.1.2
 * Retail: Fixed LUA error when mousing over buff frames area.
 
