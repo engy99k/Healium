@@ -94,6 +94,26 @@
 		<PushedTexture file="Interface/Buttons/UI-Quickslot-Depress" />
 		<Frames>
 			<Cooldown parentKey="cooldown" inherits="CooldownFrameTemplate" hidden="true" setAllPoints="true"/>
+			<Frame parentKey="CurseBar" alpha="0">
+				<Size x="36" y="36"/>
+				<Anchors>
+					<Anchor point="CENTER"></Anchor>
+				</Anchors>			
+				<Scripts>
+					<OnLoad>
+						if BackdropTemplateMixin then
+							Mixin(self, BackdropTemplateMixin)
+						end
+
+						self:SetBackdrop({
+							edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+							edgeSize = 28,
+							insets = {left = 0, right = 0, top = 0, bottom = 0},
+						})				
+						
+					</OnLoad>
+				</Scripts>
+			</Frame>				
 		</Frames>
 		<Attributes>
 			<Attribute name="type" value="spell" />
@@ -269,7 +289,29 @@
 						self:SetFrameLevel(self:GetParent():GetFrameLevel() + 3);
 					</OnShow>
 				</Scripts>
-			</StatusBar>	
+			</StatusBar>
+			<Frame parentKey="CurseBar" alpha="0">
+				<Size x="124" y="32"/>
+				<Anchors>
+					<Anchor point="CENTER"></Anchor>
+				</Anchors>			
+				<Scripts>
+					<OnLoad>
+						if BackdropTemplateMixin then
+							Mixin(self, BackdropTemplateMixin)
+						end
+
+						self:SetBackdrop({
+							edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+							edgeSize = 24,
+							insets = {left = 0, right = 0, top = 0, bottom = 0},
+						})	
+					</OnLoad>				
+					<OnShow>
+						self:SetFrameLevel(self:GetParent():GetFrameLevel() + 4);
+					</OnShow>
+				</Scripts>	
+			</Frame>			
 			<Frame parentKey="AggroBar" alpha="0">
 				<Size x="110" y="20"/>
 				<Anchors>

@@ -36,7 +36,15 @@ Healium_MaxClassSpells = 20 -- For now this is manually set to the max number of
 Healium_Type_Spell = 0  -- note that nil also means Spell!  This is because we don't init the Spelltypes table.
 Healium_Type_Macro = 1
 Healium_Type_Item = 2
-	
+
+Healium_DebuffTypeColor = {
+    Magic   = { r = 0.2, g = 0.6, b = 1.0 },  -- blue
+    Curse   = { r = 0.6, g = 0.0, b = 1.0 },  -- purple
+    Disease = { r = 0.6, g = 0.4, b = 0.0 },  -- brown
+    Poison  = { r = 0.0, g = 0.6, b = 0.0 },  -- green
+	None    = { r = 1.0, g = 1.0, b = 0.0 },  -- default/yellow	
+	Secret  = { r = 0.6, g = 0.0, b = 1.0 },  -- purple
+}	
 	
 local HealiumDefaults = {
   Scale = 1.0,									-- Scale of frames
@@ -74,7 +82,7 @@ local HealiumDefaults = {
   --ShowIncomingHeals = true,					-- Whether or not to show incoming heals
   ShowRaidIcons = true,							-- Whether or not to show raid icons
   UppercaseNames = true,						-- Whether or not to show names in UPPERCASE
-  ShowMinimapButton = true						-- Whether or not to show the minimap button
+  ShowMinimapButton = true,						-- Whether or not to show the minimap button
 }
 
 function Healium_DeepCopy(object)
@@ -101,6 +109,7 @@ Healium = Healium_DeepCopy(HealiumDefaults)
 -- HealiumGlobal is the variable that holds all Healium settings that are not character specific
 HealiumGlobal = {
   Friends = { },								-- List of healium friends
+  ShownOneTimeDebuffWarningsMsg = nil 			-- Whether or not the user ha been displayed the one time debuff warning message
 }
 
 --[[
@@ -164,16 +173,62 @@ function Healium_TableLength(T)
   return count
 end
 
+local function Healium_TableToString(tbl, indent, visited)
+    indent = indent or 0
+    visited = visited or {}
+
+    if type(tbl) ~= "table" then
+        return tostring(tbl)
+    end
+
+    if visited[tbl] then
+        return string.rep(" ", indent) .. "*RECURSION*"
+    end
+
+    visited[tbl] = true
+
+    local lines = {}
+    table.insert(lines, string.rep(" ", indent) .. "{")
+
+    for k, v in pairs(tbl) do
+        local keyStr = tostring(k)
+        local valueStr
+
+        if type(v) == "table" then
+            valueStr = Healium_TableToString(v, indent + 4, visited)
+        else
+            valueStr = tostring(v)
+        end
+
+        table.insert(
+            lines,
+            string.rep(" ", indent + 4) .. keyStr .. " = " .. valueStr
+        )
+    end
+
+    table.insert(lines, string.rep(" ", indent) .. "}")
+    return table.concat(lines, "\n")
+end
+
 function Healium_DebugPrint(...)
-	if (Healium_Debug) then
-		local result = "Debug: "
-		
-		for i = 1, select("#", ...) do 
-			result = result .. " " .. tostring(select(i, ...))
-		end
-	
-		Healium_Print(result)		
-	end
+    if not Healium_Debug then return end
+
+    local result = "Debug:"
+
+    for i = 1, select("#", ...) do
+        local value = select(i, ...)
+        local str
+
+        if type(value) == "table" then
+            str = "\n" .. Healium_TableToString(value)
+        else
+            str = tostring(value)
+        end
+
+        result = result .. " " .. str
+    end
+
+    Healium_Print(result)
 end
 
 function Healium_Warn(msg)
@@ -315,7 +370,9 @@ function Healium_UpdateUnitHealth(unitName, NamePlate)
 	NamePlate.HealthBar:SetMinMaxValues(0,MaxHealth)
 	NamePlate.HealthBar:SetValue(Health)
 	
-	if Healium.UseClassColors then
+	if Healium.EnableDebufs and Healium.EnableDebufHealthbarColoring and NamePlate.hasDebuf then
+		NamePlate.HealthBar:SetStatusBarColor(NamePlate.debuffColor.r, NamePlate.debuffColor.g, NamePlate.debuffColor.b)	
+	elseif Healium.UseClassColors then
 		local class = select(2, UnitClass(unitName)) or "WARRIOR"
 		local color = RAID_CLASS_COLORS[class]
 		NamePlate.HealthBar:SetStatusBarColor(color.r, color.g, color.b)					
@@ -632,7 +689,6 @@ local function Healium_UpdateSpells()
 end
 
 -- does special checks for specific buffs/debuffs
--- does special checks for specific buffs/debuffs
 function Healium_UpdateSpecialBuffs(unit)
 
 	if HealiumClass == "PRIEST" then 
@@ -908,7 +964,7 @@ function Healium_UpdateButtonAttributes()
 		end
 	end
 	
---	Healium_UpdateCures()
+	Healium_UpdateCures()
 end
 
 local function UpdateButtonVisibility(frame)
@@ -1239,6 +1295,7 @@ function Healium_OnEvent(frame, event, ...)
 
 		InitVariables()
 		Healium_InitSpells(HealiumClass, HealiumRace) 		
+		Healium_InitDebuffSound()		
 		Healium_CreateMiniMapButton()
 		Healium_UpdateShowMinimapButton()
 		Healium_CreateConfigPanel(HealiumClass, Healium_Version)
@@ -1254,8 +1311,8 @@ function Healium_OnEvent(frame, event, ...)
 		Healium_UpdateShowRaidIcons()
 		Healium_UpdateButtons()		
 		Healium_UpdateShowRole()	
+		Healium_ShowOneTimeDebuffWarningsMessage()
 		LoadedTime = GetTime()
-		
 		return
 	end	
 	
@@ -1285,3 +1342,19 @@ function Healium_OnEvent(frame, event, ...)
 	end
 end
 
+
+function Healium_ShowOneTimeDebuffWarningsMessage()
+
+		StaticPopupDialogs["HEALIUM_ONE_TIME_DEBUFF_WARNING_MSG"] = {
+			text = Healium_AddonColoredName .. " has added back Debuff warnings features. You may want to check " .. Healium_AddonColoredName.. " settings if you want to enable or disable these. Due to Blizzard's midnight changes, during combat addons can not detect the type of debuffs on players, so in combat we color debuffs as curses.",
+			button1 = "OK",
+			timeout = 0,
+			whileDead = true,
+			hideOnEscape = true,
+		}
+		
+		if not HealiumGlobal.ShownOneTimeDebuffWarningsMsg then 
+			StaticPopup_Show("HEALIUM_ONE_TIME_DEBUFF_WARNING_MSG")
+			HealiumGlobal.ShownOneTimeDebuffWarningsMsg = true
+		end
+end

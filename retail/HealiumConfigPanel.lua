@@ -80,6 +80,34 @@ local function DropDownMenu_Init(frame,level)
 	Lib_UIDropDownMenu_AddButton(info, level)   
 end
 
+local function SoundDropDownMenuItem_OnClick(dropdownbutton)
+	Lib_UIDropDownMenu_SetSelectedValue(dropdownbutton.owner, dropdownbutton.value) 
+	Healium.DebufAudioFile = dropdownbutton.value
+	Healium_InitDebuffSound()
+	Healium_PlayDebuffSound()
+end
+
+local function SoundDropDownMenu_Init(frame, level)
+	level = level or 1  
+	local info = Lib_UIDropDownMenu_CreateInfo() 
+	local sound = Lib_UIDropDownMenu_GetText(frame)
+	
+	for k, v in ipairs (Healium_Sounds) do
+		local this_sound = next(v, nil)
+		if Healium_IsRetail or not v[this_sound].retail then 
+			info.text = this_sound
+			info.value = this_sound
+			info.func = SoundDropDownMenuItem_OnClick
+			info.owner = frame
+			info.checked = nil 
+			Lib_UIDropDownMenu_AddButton(info, level) 
+			if this_sound == sound then
+				Lib_UIDropDownMenu_SetSelectedValue(frame, this_sound)	
+			end
+		end
+	end
+end
+
 local function UpdateRangeCheckSliderText(frame)
     frame.Text:SetText("Range Check Frequency: |cFFFFFFFF".. format("%.1f",frame:GetValue()) .. " Hz")
 end
@@ -167,6 +195,45 @@ end
 local function ShowMinimapButtonCheck_OnClick(frame)
 	Healium.ShowMinimapButton = frame:GetChecked() or false
 	Healium_UpdateShowMinimapButton()
+end
+
+local function UpdateEnableDebuffsControls(frame)
+	local color 
+	if frame:GetChecked() then
+		color = NORMAL_FONT_COLOR
+	else
+		color = GRAY_FONT_COLOR
+	end
+	
+	for _,j in ipairs(frame.children) do
+		j:SetTextColor(color.r, color.g, color.b)
+	end
+end
+
+
+local function EnableDebuffsCheck_OnClick(frame)
+	UpdateEnableDebuffsControls(frame)
+	Healium.EnableDebufs = frame:GetChecked() or false
+	Healium_UpdateEnableDebuffs()
+end
+
+local function EnableDebuffAudioCheck_OnClick(frame)
+	Healium.EnableDebufAudio = frame:GetChecked() or false
+end
+
+local function EnableDebuffHealthbarHighlightingCheck_OnClick(frame)
+	Healium.EnableDebufHealthbarHighlighting = frame:GetChecked() or false
+	Healium_UpdateEnableDebuffs()
+end
+
+local function EnableDebuffButtonHighlightingCheck_OnClick(frame)
+	Healium.EnableDebufButtonHighlighting = frame:GetChecked() or false
+	Healium_UpdateEnableDebuffs()
+end
+
+local function EnableDebuffHealthbarColoringCheck_OnClick(frame)
+	Healium.EnableDebufHealthbarColoring = frame:GetChecked() or false
+	Healium_UpdateEnableDebuffs()
 end
 
 local function ScaleSlider_OnValueChanged(frame)
@@ -579,10 +646,102 @@ function Healium_CreateConfigPanel(Class, Version)
 		Healium_ShowHideTanksFrame()
     end)			
 	
+	-- Debuff Warnings
+	local DebuffWarningsTitleText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalLarge")
+	DebuffWarningsTitleText:SetJustifyH("LEFT")
+	DebuffWarningsTitleText:SetPoint("TOPLEFT", Healium_ShowTanksCheck, "BOTTOMLEFT", 0, -30)
+	DebuffWarningsTitleText:SetText("Debuff Warnings")
+	
+	local DebuffWarningsSubText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalSmall")
+	DebuffWarningsSubText:SetJustifyH("LEFT")
+	DebuffWarningsSubText:SetPoint("TOPLEFT", DebuffWarningsTitleText, "BOTTOMLEFT", 0, 0)
+	DebuffWarningsSubText:SetText("Debuff warnings are audible and visual indicators that|nnotify you when you can cure a debuff on a player.")
+	DebuffWarningsSubText:SetTextColor(1,1,1,1) 
+
+	
+	-- Enable Debuffs check button
+    local EnableDebuffsCheck = CreateFrame("CheckButton","$parentEnableDebuffsCheckButton",scrollchild,"ChatConfigCheckButtonTemplate")
+	EnableDebuffsCheck.children = { }
+    EnableDebuffsCheck:SetPoint("TOPLEFT", DebuffWarningsSubText, "BOTTOMLEFT", 0, -10)
+    
+    EnableDebuffsCheck.Text = EnableDebuffsCheck:CreateFontString(nil, "BACKGROUND","GameFontNormal")
+	EnableDebuffsCheck.Text:SetPoint("LEFT", EnableDebuffsCheck, "RIGHT", 0)
+    EnableDebuffsCheck.Text:SetText("Enable Debuff Warnings")
+
+	EnableDebuffsCheck:SetScript("OnClick", EnableDebuffsCheck_OnClick)	
+	EnableDebuffsCheck.tooltipText = "Enables debuff warnings"
+
+	-- Enable Debuff Healthbar coloring check button 
+	local EnableDebufHealthbarColoringCheck	= CreateFrame("CheckButton","$parentEnableDebuffHealthbarColoringCheckButton",scrollchild,"ChatConfigCheckButtonTemplate")
+    EnableDebufHealthbarColoringCheck:SetPoint("TOPLEFT", EnableDebuffsCheck, "BOTTOMLEFT", 20, 0)
+    
+    EnableDebufHealthbarColoringCheck.Text = EnableDebufHealthbarColoringCheck:CreateFontString(nil, "BACKGROUND","GameFontNormal")
+	EnableDebufHealthbarColoringCheck.Text:SetPoint("LEFT", EnableDebufHealthbarColoringCheck, "RIGHT", 0)
+    EnableDebufHealthbarColoringCheck.Text:SetText("Healthbar Coloring")
+	table.insert(EnableDebuffsCheck.children, EnableDebufHealthbarColoringCheck.Text)
+	
+	EnableDebufHealthbarColoringCheck:SetScript("OnClick", EnableDebuffHealthbarColoringCheck_OnClick)	
+	EnableDebufHealthbarColoringCheck.tooltipText = "Enables coloring of the healthbar of a player that has a debuff which you can cure"
+	
+	
+	-- Enable Debuff Healthbar highlighting check button
+    local EnableDebuffHealthbarHighlightingCheck = CreateFrame("CheckButton","$parentEnableDebuffHealthbarHighlightingCheck",scrollchild,"ChatConfigCheckButtonTemplate")
+    EnableDebuffHealthbarHighlightingCheck:SetPoint("TOPLEFT", EnableDebufHealthbarColoringCheck, "BOTTOMLEFT", 0, 0)
+    
+    EnableDebuffHealthbarHighlightingCheck.Text = EnableDebuffHealthbarHighlightingCheck:CreateFontString(nil, "BACKGROUND","GameFontNormal")
+	EnableDebuffHealthbarHighlightingCheck.Text:SetPoint("LEFT", EnableDebuffHealthbarHighlightingCheck, "RIGHT", 0)
+    EnableDebuffHealthbarHighlightingCheck.Text:SetText("Healthbar Highlight Warning")
+	table.insert(EnableDebuffsCheck.children, EnableDebuffHealthbarHighlightingCheck.Text)
+	
+	EnableDebuffHealthbarHighlightingCheck:SetScript("OnClick", EnableDebuffHealthbarHighlightingCheck_OnClick)	
+	EnableDebuffHealthbarHighlightingCheck.tooltipText = "Enables highlighting of the healthbar of a player that has a debuff which you can cure"
+
+
+	-- Enable Debuff Button highlighting check button
+    local EnableDebuffButtonHighlightingCheck = CreateFrame("CheckButton","$parentEnableDebuffButtonHighlightingCheck",scrollchild,"ChatConfigCheckButtonTemplate")
+    EnableDebuffButtonHighlightingCheck:SetPoint("TOPLEFT", EnableDebuffHealthbarHighlightingCheck, "BOTTOMLEFT", 0, 0)
+    
+    EnableDebuffButtonHighlightingCheck.Text = EnableDebuffButtonHighlightingCheck:CreateFontString(nil, "BACKGROUND","GameFontNormal")
+	EnableDebuffButtonHighlightingCheck.Text:SetPoint("LEFT", EnableDebuffButtonHighlightingCheck, "RIGHT", 0)
+    EnableDebuffButtonHighlightingCheck.Text:SetText("Button Highlight Warning")
+	table.insert(EnableDebuffsCheck.children, EnableDebuffButtonHighlightingCheck.Text)
+	
+	EnableDebuffButtonHighlightingCheck:SetScript("OnClick", EnableDebuffButtonHighlightingCheck_OnClick)	
+	EnableDebuffButtonHighlightingCheck.tooltipText = "Enables highlighting of buttons which have been assigned a spell that can cure a debuff on a player"
+
+	-- Enable Debuff Audio check button
+    local EnableDebuffAudioCheck = CreateFrame("CheckButton","$parentEnableDebuffAudioCheckButton",scrollchild,"ChatConfigCheckButtonTemplate")
+    EnableDebuffAudioCheck:SetPoint("TOPLEFT", EnableDebuffButtonHighlightingCheck, "BOTTOMLEFT", 0, 0)
+    
+    EnableDebuffAudioCheck.Text = EnableDebuffAudioCheck:CreateFontString(nil, "BACKGROUND","GameFontNormal")
+	EnableDebuffAudioCheck.Text:SetPoint("LEFT", EnableDebuffAudioCheck, "RIGHT", 0)
+    EnableDebuffAudioCheck.Text:SetText("Audio Warning")
+	table.insert(EnableDebuffsCheck.children, EnableDebuffAudioCheck.Text)
+	
+	EnableDebuffAudioCheck:SetScript("OnClick", EnableDebuffAudioCheck_OnClick)	
+	EnableDebuffAudioCheck.tooltipText = "Enables an audio warning when a player has a debuff which you can cure, and is within 40yds"
+	
+	-- Sound drop down
+	local SoundDropDown = CreateFrame("Frame", "$parentSoundDropDown", scrollchild, "Lib_UIDropDownMenuTemplate") 
+	SoundDropDown:SetPoint("TOPLEFT", EnableDebuffAudioCheck, "BOTTOMLEFT",65, 0)
+	SoundDropDown.Text = SoundDropDown:CreateFontString(nil, "OVERLAY","GameFontNormal")
+	SoundDropDown.Text:SetText("Audio File")
+	SoundDropDown.Text:SetPoint("TOPLEFT",SoundDropDown,"TOPLEFT",-60,-5)
+	Lib_UIDropDownMenu_Initialize(SoundDropDown, SoundDropDownMenu_Init)
+	table.insert(EnableDebuffsCheck.children, SoundDropDown.Text)	
+	
+	-- Play sound button
+	local PlayButton = CreateFrame("Button", "$parentPlaySoundButton", scrollchild, "UIPanelButtonTemplate")
+	PlayButton:SetText("Play")
+	PlayButton:SetWidth(54)
+	PlayButton:SetHeight(22)
+	PlayButton:SetPoint("LEFT", SoundDropDown, "RIGHT", 120, 0)
+	PlayButton:SetScript("OnClick", Healium_PlayDebuffSound)	
+	
 	-- CPU Intensive Settings text
 	local UpdatingTitleText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalLarge")
 	UpdatingTitleText:SetJustifyH("LEFT")
-	UpdatingTitleText:SetPoint("TOPLEFT", Healium_ShowTanksCheck, "BOTTOMLEFT", 0, -30)
+	UpdatingTitleText:SetPoint("TOPLEFT", EnableDebuffAudioCheck, "BOTTOMLEFT", -20, -60)
 	UpdatingTitleText:SetText("CPU Intensive Settings")
 
 	local UpdatingTitleSubText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalSmall")
@@ -690,17 +849,24 @@ function Healium_CreateConfigPanel(Class, Version)
 	HideCloseButtonCheck:SetChecked(Healium.HideCloseButton)
 	HideCaptionsCheck:SetChecked(Healium.HideCaptions)
 	LockFramePositionsCheck:SetChecked(Healium.LockFrames)
+	EnableDebuffsCheck:SetChecked(Healium.EnableDebufs)	
 	EnableCliqueCheck:SetChecked(Healium.EnableClique)
 			
 	ShowThreatCheck:SetChecked(Healium.ShowThreat)
 
 	ShowRoleCheck:SetChecked(Healium.ShowRole)	
 	Healium_ShowFocusCheck:SetChecked(Healium.ShowFocusFrame)		
-
 	
 	ShowRaidIconsCheck:SetChecked(Healium.ShowRaidIcons)
 	UppercaseNamesCheck:SetChecked(Healium.UppercaseNames)
 	ShowMinimapButtonCheck:SetChecked(Healium.ShowMinimapButton)
+	
+	EnableDebuffAudioCheck:SetChecked(Healium.EnableDebufAudio)
+	EnableDebuffHealthbarHighlightingCheck:SetChecked(Healium.EnableDebufHealthbarHighlighting)
+	EnableDebuffButtonHighlightingCheck:SetChecked(Healium.EnableDebufButtonHighlighting)
+	EnableDebufHealthbarColoringCheck:SetChecked(Healium.EnableDebufHealthbarColoring)
+	
+	Lib_UIDropDownMenu_SetText(SoundDropDown, Healium.DebufAudioFile)	
 	
 	Healium_ShowPartyCheck:SetChecked(Healium.ShowPartyFrame)
 	Healium_ShowPetsCheck:SetChecked(Healium.ShowPetsFrame)
@@ -723,4 +889,6 @@ function Healium_CreateConfigPanel(Class, Version)
 	
 	ScaleSlider:SetValue(Healium.Scale)
 	RangeCheckSlider:SetValue(1.0/Healium.RangeCheckPeriod)
+	
+	UpdateEnableDebuffsControls(EnableDebuffsCheck)
 end

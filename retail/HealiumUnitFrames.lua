@@ -24,10 +24,13 @@ local FocusFrameWasShown = nil
 local MaxBuffs = 6
 local xSpacing = 2
 local NamePlateHeight = 28
+local LastDebuffSoundTime = GetTime()
 
 local UnitFrames = { } -- table of all unit frames
 
 ClickCastFrames = ClickCastFrames or {} -- used by Clique and any other click cast frames
+
+local DebuffSoundPath
 
 -- locale safe versions of spell names
 local RejuvenationGermination = Healium_GetSpellName(155777) -- Rejuvenation (Germination) is a buff when a druid with the Germination talent casts Rejuvenation on a target
@@ -37,6 +40,45 @@ local GlimmerOfLight = Healium_GetSpellName(325983) -- Glimmer of Light is a buf
 local Tranquility = Healium_GetSpellName(740) -- Tranquility - HOT from Druid casting Tranquility
 local TemporalBeaconName = Healium_GetSpellName(400735) -- Temporal Beacon
 
+-- sounds ids from https://wow.tools/files/#search=&page=1&sort=0&desc=asc
+Healium_Sounds = {
+	{ ["Alliance Bell"] = { fileid = 566564, path = "Sound\\Doodad\\BellTollAlliance.ogg"}},
+	{ ["Bellow"] = { fileid = 566234, path = "Sound\\Doodad\\BellowIn.ogg" }},
+	{ ["Dwarf Horn"] = {fileid = 566064, path = "Sound\\Doodad\\DwarfHorn.ogg" }},
+	{ ["Gruntling Horn A"] = {retail = 1, fileid = 598076, path = "Sound\\Events\\gruntling_horn_aa.ogg" }},
+	{ ["Gruntling Horn B"] = {retail = 1, fileid = 598196, path = "Sound\\Events\\gruntling_horn_bb.ogg" }},
+	{ ["Horde Bell"] = { fileid = 565853, path = "Sound\\Doodad\\BellTollHorde.ogg" }},
+	{ ["Man Scream"] = { retail = 1, fileid = 598052, path = "Sound\\Events\\EbonHold_ManScream1_02.ogg" }},
+	{ ["Night Elf Bell"] = { fileid = 566558, path = "Sound\\Doodad\\BellTollNightElf.ogg" }},
+	{ ["Space Death"] = { retail = 1, fileid = 567198, path = "Sound\\Effects\\DeathImpacts\\SpaceDeathUni.ogg" }},
+	{ ["Tribal Bell"] = { fileid = 566027, path = "Sound\\Doodad\\BellTollTribal.ogg" }},
+	{ ["Wisp"] = { fileid = 567294, path = "Sound\\Event Sounds\\Wisp\\WispPissed2.ogg" }},
+	{ ["Woman Scream"] = { retail = 1, fileid = 598223, path = "Sound\\Events\\EbonHold_WomanScream1_02.ogg" }}
+}
+
+function Healium_GetSoundPath(sound)
+	for i,j in ipairs(Healium_Sounds) do
+		if sound == next(j, nil) then
+			return j[sound].fileid
+		end
+	end
+	
+	return nil
+end
+
+function Healium_InitDebuffSound()
+	DebuffSoundPath = Healium_GetSoundPath(Healium.DebufAudioFile)
+	
+	if DebuffSoundPath == nil then
+		Healium.DebufAudioFile = "Horde Bell"
+		DebuffSoundPath = Healium_GetSoundPath(Healium.DebufAudioFile)
+	end
+end
+
+function Healium_PlayDebuffSound()
+	Healium_DebugPrint("playing sound " .. DebuffSoundPath)
+	PlaySoundFile(DebuffSoundPath)	
+end
 
 local function CreateButton(ButtonName,ParentFrame,xoffset)
 	local button = CreateFrame("Button", ButtonName, ParentFrame, "HealiumHealButtonTemplate")
@@ -900,9 +942,89 @@ function Healium_UpdateUnitBuffs(unit, frame)
 		end
 	end
 
-	-- hide remainder frames
+	-- hide remainder buff frames
 	for i = buffIndex, MaxBuffs, 1 do
 		frame.buffs[i]:Hide()
+	end
+	
+-- Handle affliction notification
+	if Healium.EnableDebufs and frame:IsVisible() then
+	
+		local foundDebuff = false
+		local debuffTypes = { } 
+		
+		for i = 1, 40, 1 do
+			local aura = C_UnitAuras.GetDebuffDataByIndex(unit, i, "RAID_PLAYER_DISPELLABLE")
+			if aura == nil then break end
+			foundDebuff = true
+			local debuffType 
+			
+			if issecretvalue(aura.dispelName) then
+				debuffType = "Secret"
+			else
+				debuffType = aura.dispelName
+			end
+				
+			if debuffType ~= nil then
+				debuffTypes[debuffType] = true
+				local debuffColor = Healium_DebuffTypeColor[debuffType] or Healium_DebuffTypeColor["none"];					
+				frame.hasDebuf = true
+				frame.debuffColor = debuffColor
+				
+				if Healium.EnableDebufHealthbarHighlighting then
+					frame.CurseBar:SetBackdropBorderColor(debuffColor.r, debuffColor.g, debuffColor.b)
+					frame.CurseBar:SetAlpha(1)
+				end	
+				
+				if Healium.EnableDebufAudio then 
+					local now = GetTime()
+					-- UnitInRange will return false for "player"
+					local inRange = UnitInRange(unit)
+					
+					if issecretvalue(inRange) then 
+						inRange = true
+					end
+					
+					local isGroupUnit = unit == "player" or UnitInParty(unit) or UnitInRaid(unit)
+
+					if isGroupUnit and (unit == "player" or inRange) then
+						if now > (LastDebuffSoundTime + 7) then
+							Healium_PlayDebuffSound()
+							LastDebuffSoundTime = now
+						end
+					end
+				end
+			end
+		end
+		
+		if (not foundDebuff) and frame.hasDebuf then
+			frame.CurseBar:SetAlpha(0)
+			frame.hasDebuf = nil
+		end
+		
+		if Healium.EnableDebufButtonHighlighting then 
+			Healium_ShowDebuffButtons(Profile, frame, debuffTypes)		
+		end
+		
+		Healium_UpdateUnitHealth(unit, frame)
+	end	
+	
+end
+
+function Healium_UpdateEnableDebuffs()
+	for _,j in pairs(UnitFrames) do
+		if j.hasDebuf then
+			frame.CurseBar:SetAlpha(0)
+			frame.hasDebuf = nil
+			
+			for i=1, Healium_MaxButtons, 1 do
+				local button = frame.button[i]
+				if button then
+					button.curseBar:SetAlpha(0)
+					button.curseBar.hasDebuf = nil
+				end
+			end
+		end	
 	end
 end
 

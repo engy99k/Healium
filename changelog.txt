@@ -1,3 +1,6 @@
+3.2.0 BETA
+* Retail: Added back Debuff warnings.
+
 3.1.3
 * Retail: Fixed some special buffs not showing in Healium like Rejuvination (Germination)
 
