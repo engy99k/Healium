@@ -1,4 +1,4 @@
-3.2.0 BETA
+3.2.0
 * Retail: Added back Debuff warnings.
 
 3.1.3
