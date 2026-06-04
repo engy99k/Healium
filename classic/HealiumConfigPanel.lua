@@ -1,4 +1,5 @@
 Healium_ConfigPanel_Category = nil
+local Healium_ConfigPanel_CategoryID = nil
 
 local function CreateSliderFrame(name, parent)
 	local template
@@ -274,7 +275,11 @@ end
 
 function Healium_ShowConfigPanel()
 	if not InCombatLockdown() then
-		Settings.OpenToCategory(Healium_ConfigPanel_Category.ID)
+		if Healium_IsClassicMists then 
+			Settings.OpenToCategory(Healium_ConfigPanel_CategoryID)
+		else
+			Settings.OpenToCategory(Healium_ConfigPanel_Category.ID)
+		end
 	end
 end
 
@@ -325,9 +330,13 @@ function Healium_CreateConfigPanel(Class, Version)
 	
 	local layout
 	Healium_ConfigPanel_Category, layout = Settings.RegisterCanvasLayoutCategory(panel, panel.name);
-	Healium_ConfigPanel_Category.ID = panel.name
+	if not Healium_IsClassicMists then 
+		Healium_ConfigPanel_Category.ID = panel.name
+	end
 	Settings.RegisterAddOnCategory(Healium_ConfigPanel_Category);
-
+	if Healium_IsClassicMists then 
+		Healium_ConfigPanel_CategoryID = Healium_ConfigPanel_Category:GetID()
+	end
 
 	local scrollframe = CreateFrame("ScrollFrame", "HealiumPanelScrollFrame", panel, "UIPanelScrollFrameTemplate") 
 	scrollframe:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -25)

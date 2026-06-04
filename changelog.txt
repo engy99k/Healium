@@ -1,3 +1,8 @@
+3.2.2
+* Classic Mists: Update ToC
+* Classic Mists: Fixed buttons no longer working
+* Classic Mists: Fixed config panel not opening from within Healium
+
 3.2.1
 * Retail: Update ToC
 
