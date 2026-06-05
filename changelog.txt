@@ -1,3 +1,6 @@
+3.2.3
+* Classic Mists: Committed files I missed as part of 3.2.2 update, sorry.
+
 3.2.2
 * Classic Mists: Update ToC
 * Classic Mists: Fixed buttons no longer working

@@ -2,7 +2,7 @@ function Healium_HealButton_OnLoad(frame)
 	frame.TimeSinceLastUpdate = 0
 	frame:RegisterEvent("SPELL_UPDATE_USABLE")
 	frame:RegisterForDrag("LeftButton")
-	if Healium_IsClassicBCC then	
+	if Healium_IsClassicBCC or Healium_IsClassicMists then	
 		frame:RegisterForClicks("AnyUp", "AnyDown")							
 	else
 		frame:RegisterForClicks("LeftButtonUp", "RightButtonUp")
