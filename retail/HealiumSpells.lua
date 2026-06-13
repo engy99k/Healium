@@ -166,6 +166,7 @@ function Healium_InitSpells(class, race)
 		AddSpell(7328) -- Redemption (rez)
 		AddSpell(183998) -- Light of the Martyr
 		AddSpell(391054) -- Intercession
+		AddSpell(204018) -- blessing of spellwarding
 		
 		-- Paladin Cleanse Toxins
 		CureName = Healium_GetSpellName(213644)

@@ -44,7 +44,15 @@ Healium_MaxClassSpells = 20 -- For now this is manually set to the max number of
 Healium_Type_Spell = 0  -- note that nil also means Spell!  This is because we don't init the Spelltypes table.
 Healium_Type_Macro = 1
 Healium_Type_Item = 2
-	
+
+Healium_DebuffTypeColor = {
+    Magic   = { r = 0.2, g = 0.6, b = 1.0 },  -- blue
+    Curse   = { r = 0.6, g = 0.0, b = 1.0 },  -- purple
+    Disease = { r = 0.6, g = 0.4, b = 0.0 },  -- brown
+    Poison  = { r = 0.0, g = 0.6, b = 0.0 },  -- green
+	None    = { r = 1.0, g = 1.0, b = 0.0 },  -- default/yellow	
+	Secret  = { r = 0.6, g = 0.0, b = 1.0 },  -- purple
+}
 	
 local HealiumDefaults = {
   Scale = 1.0,									-- Scale of frames

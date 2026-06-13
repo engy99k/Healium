@@ -1042,7 +1042,7 @@ function Healium_UpdateUnitBuffs(unit, frame)
 				if Healium_CanCureDebuff(debuffType) then
 					foundDebuff = true
 					debuffTypes[debuffType] = true
-					local debuffColor = DebuffTypeColor[debuffType] or DebuffTypeColor["none"];					
+					local debuffColor = Healium_DebuffTypeColor[debuffType] or Healium_DebuffTypeColor["none"];					
 					frame.hasDebuf = true
 					frame.debuffColor = debuffColor
 					

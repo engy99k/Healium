@@ -554,16 +554,16 @@ function Healium_ShowDebuffButtons(Profile, frame, debuffTypes)
 			if cure ~= nil then
 				if debuffTypes["Curse"] and cure.CanCureCurse then
 					flag = true
-					debuffColor = DebuffTypeColor["Curse"] 
+					debuffColor = Healium_DebuffTypeColor["Curse"] 
 				elseif debuffTypes["Disease"] and cure.CanCureDisease then
 					flag = true
-					debuffColor = DebuffTypeColor["Disease"]
+					debuffColor = Healium_DebuffTypeColor["Disease"]
 				elseif debuffTypes["Magic"] and GetCanCureMagic(cure) then
 					flag = true
-					debuffColor = DebuffTypeColor["Magic"]
+					debuffColor = Healium_DebuffTypeColor["Magic"]
 				elseif debuffTypes["Poison"] and cure.CanCurePoison then
 					flag = true
-					debuffColor = DebuffTypeColor["Poison"]
+					debuffColor = Healium_DebuffTypeColor["Poison"]
 				else 
 					flag = false
 				end
