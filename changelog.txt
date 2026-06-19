@@ -1,3 +1,6 @@
+3.2.5
+* Retail: Update ToC
+
 3.2.4
 * Classic Mists: Fixed debuff warnings not working and related LUA error.
 * Retail: Paladin: Added Blessing of Spellwarding to default spell list.
