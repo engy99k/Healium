@@ -1,3 +1,7 @@
+3.2.6
+* Classic BC: Update ToC
+* Classic BC: Fixed not being able to open Healium config panel
+
 3.2.5
 * Retail: Update ToC
 

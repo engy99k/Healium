@@ -275,7 +275,7 @@ end
 
 function Healium_ShowConfigPanel()
 	if not InCombatLockdown() then
-		if Healium_IsClassicMists then 
+		if Healium_IsClassicMists or Healium_IsClassicBCC then 
 			Settings.OpenToCategory(Healium_ConfigPanel_CategoryID)
 		else
 			Settings.OpenToCategory(Healium_ConfigPanel_Category.ID)
@@ -330,11 +330,11 @@ function Healium_CreateConfigPanel(Class, Version)
 	
 	local layout
 	Healium_ConfigPanel_Category, layout = Settings.RegisterCanvasLayoutCategory(panel, panel.name);
-	if not Healium_IsClassicMists then 
+	if not (Healium_IsClassicMists or Healium_IsClassicBCC) then 
 		Healium_ConfigPanel_Category.ID = panel.name
 	end
 	Settings.RegisterAddOnCategory(Healium_ConfigPanel_Category);
-	if Healium_IsClassicMists then 
+	if Healium_IsClassicMists or Healium_IsClassicBCC then 
 		Healium_ConfigPanel_CategoryID = Healium_ConfigPanel_Category:GetID()
 	end
 
