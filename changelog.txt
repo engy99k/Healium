@@ -1,3 +1,8 @@
+3.2.7
+* Classic: Updated ToC
+* Classic: Fixed clicks not casting
+* Classic: Fixed config panel not opening
+
 3.2.6
 * Classic BC: Update ToC
 * Classic BC: Fixed not being able to open Healium config panel
