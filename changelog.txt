@@ -1,3 +1,6 @@
+3.2.8
+All Classics: Fixed LUA error when hiding frames
+
 3.2.7
 * Classic: Updated ToC
 * Classic: Fixed clicks not casting

@@ -645,7 +645,7 @@ function Healium_ToggleAllFrames(forceHide, silent)
 		TanksFrame:Hide()
 		TargetFrame:Hide()
 		
-		if not Healium_IsClasic then 
+		if not Healium_IsClassic then 
 			FocusFrame:Hide()
 		end
 		
