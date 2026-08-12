@@ -2,6 +2,45 @@
  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
  xsi:schemaLocation="http://www.blizzard.com/wow/ui/ ..\FrameXML\UI.xsd">
  
+ 
+ <!-- Custom replacement for the removed TargetBuffFrameTemplate -->
+<Button name="HealiumBuffButtonTemplate" virtual="true">
+    <Size x="15" y="15"/>
+    <Layers>
+        <Layer level="BACKGROUND">
+            <Texture parentKey="icon" setAllPoints="true"/>
+        </Layer>
+        <Layer level="OVERLAY">
+            <FontString parentKey="count" inherits="NumberFontNormal" justifyH="RIGHT">
+                <Anchors>
+                    <Anchor point="BOTTOMRIGHT" x="-1" y="0"/>
+                </Anchors>
+            </FontString>
+        </Layer>
+    </Layers>
+    <Frames>
+        <Cooldown parentKey="cooldown" inherits="CooldownFrameTemplate" reverse="true" drawEdge="true" setAllPoints="true"/>
+    </Frames>
+	<Scripts>
+			<OnEnter>
+				if self.unit and self.auraInstanceID then
+					GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT")
+					if GameTooltip.SetUnitAuraByInstanceID then
+						GameTooltip:SetUnitAuraByInstanceID(self.unit, self.auraInstanceID)
+					elseif GameTooltip.SetUnitBuffByAuraInstanceID then
+						GameTooltip:SetUnitBuffByAuraInstanceID(self.unit, self.auraInstanceID)
+					else
+						GameTooltip:SetUnitAura(self.unit, self.id, "HELPFUL")
+					end
+					GameTooltip:Show()
+				end
+			</OnEnter>
+			<OnLeave>
+				GameTooltip:Hide()
+				</OnLeave>
+		</Scripts>	
+</Button>
+
 <!-- The main frame template -->	
 	<Frame name="HealiumUnitFrameTemplate" virtual="true" movable="true" parent="UIParent" hidden="true" enableMouse="true">
         <Size>
@@ -149,7 +188,7 @@
 			<Attribute name="type1" value="target" />
 		</Attributes>
 		<Frames>
-			<Frame name="$parent_Buff1" inherits="TargetBuffFrameTemplate" hidden="true">
+			<Button name="$parent_Buff1" inherits="HealiumBuffButtonTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="RIGHT" relativePoint="LEFT">
 						<Offset>
@@ -157,8 +196,8 @@
 						</Offset>
 					</Anchor>
 				</Anchors>
-			</Frame>
-			<Frame name="$parent_Buff2" inherits="TargetBuffFrameTemplate" hidden="true">
+			</Button>
+			<Button name="$parent_Buff2" inherits="HealiumBuffButtonTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff1">
 						<Offset>
@@ -166,8 +205,8 @@
 						</Offset>
 					</Anchor>
 				</Anchors>	
-			</Frame>			
-			<Frame name="$parent_Buff3" inherits="TargetBuffFrameTemplate" hidden="true">
+			</Button>			
+			<Button name="$parent_Buff3" inherits="HealiumBuffButtonTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff2">
 						<Offset>
@@ -175,8 +214,8 @@
 						</Offset>
 					</Anchor>
 				</Anchors>				
-			</Frame>						
-			<Frame name="$parent_Buff4" inherits="TargetBuffFrameTemplate" hidden="true">
+			</Button>						
+			<Button name="$parent_Buff4" inherits="HealiumBuffButtonTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff3">
 						<Offset>
@@ -184,8 +223,8 @@
 						</Offset>
 					</Anchor>
 				</Anchors>				
-			</Frame>						
-			<Frame name="$parent_Buff5" inherits="TargetBuffFrameTemplate" hidden="true">
+			</Button>						
+			<Button name="$parent_Buff5" inherits="HealiumBuffButtonTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff4">
 						<Offset>
@@ -193,8 +232,8 @@
 						</Offset>
 					</Anchor>
 				</Anchors>				
-			</Frame>				
-			<Frame name="$parent_Buff6" inherits="TargetBuffFrameTemplate" hidden="true">
+			</Button>				
+			<Button name="$parent_Buff6" inherits="HealiumBuffButtonTemplate" hidden="true">
 				<Anchors>
 					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" relativeTo="$parent_Buff5">
 						<Offset>
@@ -202,7 +241,7 @@
 						</Offset>
 					</Anchor>
 				</Anchors>	
-			</Frame>						
+			</Button>						
 			<StatusBar parentKey="HealthBar" minValue="0" maxValue="100" defaultValue="100">
 				<Size x="111" y="24"/>
 				<Anchors>

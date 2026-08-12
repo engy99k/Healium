@@ -889,12 +889,18 @@ function Healium_MakeRankedSpellName(spellName, spellSubtext)
 end
 
 function Healium_UpdateUnitBuffs(unit, frame)
+
+	if InCombatLockdown() then
+		return -- even calling C_UnitAuras.GetBuffDataByIndex during combat will generate a LUA error now
+	end
+	
 	local buffIndex = 1
 	local Profile = Healium_GetProfile()
 
 	if Healium.ShowBuffs then
 		for i=1, 100, 1 do
 			local aura = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL|PLAYER")
+
 			if aura then 
 				if not issecretvalue(aura.name) then
 					local name = aura.name
@@ -909,6 +915,29 @@ function Healium_UpdateUnitBuffs(unit, frame)
 					
 					if armed == true then
 						local buffFrame = frame.buffs[buffIndex]
+					
+						if buffFrame and not buffFrame.icon then
+							buffFrame:SetSize(24, 24)
+
+							-- Create missing texture
+							buffFrame.icon = buffFrame:CreateTexture(nil, "BACKGROUND")
+							buffFrame.icon:SetAllPoints()
+
+							-- Create missing stack count fontstring
+							buffFrame.count = buffFrame:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+							buffFrame.count:SetPoint("BOTTOMRIGHT", buffFrame, "BOTTOMRIGHT", -1, 0)
+							buffFrame.count:SetJustifyH("RIGHT")
+
+							-- Create missing cooldown frame
+							buffFrame.cooldown = CreateFrame("Cooldown", nil, buffFrame, "CooldownFrameTemplate")
+							buffFrame.cooldown:SetAllPoints()
+							buffFrame.cooldown:SetReverse(true)
+							buffFrame.cooldown:SetDrawEdge(true)
+							
+							-- HIDE THE GIANT COOLDOWN NUMBERS ("4", "1h")
+							buffFrame.cooldown:SetHideCountdownNumbers(true)
+						end				
+
 
 						buffFrame:SetID(i)
 						buffFrame.auraInstanceID = aura.auraInstanceID
@@ -928,7 +957,7 @@ function Healium_UpdateUnitBuffs(unit, frame)
 						else
 							buffFrame.cooldown:Hide()
 						end
-						
+
 						buffFrame:Show()
 						buffIndex = buffIndex + 1					
 						if buffIndex > MaxBuffs then

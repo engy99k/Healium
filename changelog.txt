@@ -1,3 +1,7 @@
+3.2.9
+Retail: Fixed LUA errors with their recent 12.1 update.
+Retail: Buffs and Debuff warnings no longer function during combat since Blizzard made aura APIs heavy handedly generate LUA errors during combat.
+
 3.2.8
 All Classics: Fixed LUA error when hiding frames
 
