@@ -71,10 +71,9 @@ local HealiumDefaults = {
   LockFrames = false,							-- Whether or not to prevent dragging of the frame
   EnableClique = false,							-- Whether or not to enable Clique support on the health bars
   EnableDebufs = true,							-- Whether or not to enable the debuf warning system
-  EnableDebufAudio = true,						-- Whether or not to enable playing an audio file when a person has a debuf which the player can cure
-  DebufAudioFile = nil,							-- The debuf audio file to play
   EnableDebufHealthbarHighlighting = true,		-- Whether or not to highlight the healthbar of a player when they have a debuf which you can cure
   EnableDebufButtonHighlighting = true,			-- Whether or not to highlight buttons which are assigned a spell that can cure a debuff on a player
+	ShowDebuffIcon = true,							-- Whether or not to show the debuff icon over matching cure buttons
   EnableDebufHealthbarColoring = false,			-- Whether or not to color the heatlhbar of a player when they have a debuf which you can cure
   ShowMana = true,								-- Whether or not to show mana
   ShowThreat = true,							-- Whether or not to show the threat warnings
@@ -109,7 +108,6 @@ Healium = Healium_DeepCopy(HealiumDefaults)
 -- HealiumGlobal is the variable that holds all Healium settings that are not character specific
 HealiumGlobal = {
   Friends = { },								-- List of healium friends
-  ShownOneTimeDebuffWarningsMsg = nil 			-- Whether or not the user ha been displayed the one time debuff warning message
 }
 
 --[[
@@ -290,7 +288,6 @@ function Healium_OnLoad(frame)
 	HealiumFrame:RegisterEvent("SPELL_UPDATE_CHARGES")
 	HealiumFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 	HealiumFrame:RegisterEvent("UNIT_NAME_UPDATE")
-	HealiumFrame:RegisterEvent("UNIT_AURA")
 	HealiumFrame:RegisterEvent("PLAYER_LOGIN")	
 	HealiumFrame:RegisterEvent("PLAYER_TALENT_UPDATE")		
 end
@@ -306,9 +303,13 @@ function Healium_UpdateClassColors()
 		if (k.TargetUnit) then
 			if UnitExists(k.TargetUnit) then
 				if Healium.UseClassColors then
-					local class = select(2, UnitClass(k.TargetUnit)) or "WARRIOR"
-					local color = RAID_CLASS_COLORS[class]
-					k.HealthBar:SetStatusBarColor(color.r, color.g, color.b)		
+					local class = select(2, UnitClass(k.TargetUnit))
+					if class and not issecretvalue(class) and RAID_CLASS_COLORS[class] then
+						local color = RAID_CLASS_COLORS[class]
+						k.HealthBar:SetStatusBarColor(color.r, color.g, color.b)
+					else
+						UpdateHealthBar(k)
+					end
 				else
 					UpdateHealthBar(k)
 				end
@@ -356,7 +357,8 @@ function Healium_UpdateUnitHealth(unitName, NamePlate)
 	
 	local isDead 
 		
-	if UnitIsDeadOrGhost(unitName) then
+	local deadOrGhost = UnitIsDeadOrGhost(unitName)
+	if not issecretvalue(deadOrGhost) and deadOrGhost then
 		Health = 0
 		isDead = 1
 	end
@@ -373,9 +375,13 @@ function Healium_UpdateUnitHealth(unitName, NamePlate)
 	if Healium.EnableDebufs and Healium.EnableDebufHealthbarColoring and NamePlate.hasDebuf then
 		NamePlate.HealthBar:SetStatusBarColor(NamePlate.debuffColor.r, NamePlate.debuffColor.g, NamePlate.debuffColor.b)	
 	elseif Healium.UseClassColors then
-		local class = select(2, UnitClass(unitName)) or "WARRIOR"
-		local color = RAID_CLASS_COLORS[class]
-		NamePlate.HealthBar:SetStatusBarColor(color.r, color.g, color.b)					
+		local class = select(2, UnitClass(unitName))
+		if class and not issecretvalue(class) and RAID_CLASS_COLORS[class] then
+			local color = RAID_CLASS_COLORS[class]
+			NamePlate.HealthBar:SetStatusBarColor(color.r, color.g, color.b)
+		else
+			UpdateHealthBar(NamePlate)
+		end
 	else
 		UpdateHealthBar(NamePlate)
 	end
@@ -468,11 +474,7 @@ function Healium_UpdateManaBarVisibility(frame)
 end
 
 function Healium_UpdateShowBuffs()
-	for _, k in ipairs(Healium_ShownFrames) do
-		if (k.TargetUnit) then
-			Healium_UpdateUnitBuffs(k.TargetUnit, k)
-		end
-	end	
+	Healium_RefreshAuraContainers()
 end
 
 function Healium_UpdateUnitThreat(unitName, NamePlate)
@@ -528,12 +530,22 @@ function Healium_UpdateUnitRole(unitName, NamePlate)
 	end
 	
 	local role = UnitGroupRolesAssigned(unitName);	
+	if issecretvalue(role) then
+		NamePlate.HasRole = nil
+		icon:Hide()
+		return
+	end
 	
 	if ( role == "TANK" or role == "HEALER" or role == "DAMAGER") then
 		NamePlate.HasRole = true
 		local enum = UnitGroupRolesAssignedEnum(unitName)
-		icon:SetAtlas(GetMicroIconForRoleEnum(enum), TextureKitConstants.IgnoreAtlasSize);
-		icon:Show()
+		if enum and not issecretvalue(enum) then
+			icon:SetAtlas(GetMicroIconForRoleEnum(enum), TextureKitConstants.IgnoreAtlasSize);
+			icon:Show()
+		else
+			NamePlate.HasRole = nil
+			icon:Hide()
+		end
 	else
 		NamePlate.HasRole = nil
 		icon:Hide()
@@ -690,6 +702,8 @@ end
 
 -- does special checks for specific buffs/debuffs
 function Healium_UpdateSpecialBuffs(unit)
+	if Healium_UsesAuraContainers and Healium_UsesAuraContainers() then return end
+	if C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret() then return end
 
 	if HealiumClass == "PRIEST" then 
 		local Profile = Healium_GetProfile()
@@ -965,6 +979,9 @@ function Healium_UpdateButtonAttributes()
 	end
 	
 	Healium_UpdateCures()
+	if Healium_RefreshAuraContainers then
+		Healium_RefreshAuraContainers()
+	end
 end
 
 local function UpdateButtonVisibility(frame)
@@ -1150,18 +1167,6 @@ function Healium_OnEvent(frame, event, ...)
 		return
 	end
 	
-	if event == "UNIT_AURA" then
-		if Healium_Units[arg1] then
-			for _,v  in pairs(Healium_Units[arg1]) do
-				if Healium.ShowBuffs then 
-					Healium_UpdateUnitBuffs(arg1, v)
-				end
-				Healium_UpdateSpecialBuffs(arg1)
-			end
-		end
-		return
-	end
-	
 	if (event == "UNIT_THREAT_SITUATION_UPDATE") and Healium.ShowThreat then
 		if Healium_Units[arg1] then
 			for _,v  in pairs(Healium_Units[arg1]) do
@@ -1192,6 +1197,9 @@ function Healium_OnEvent(frame, event, ...)
 		end
 		
 		Healium_FixNameplates = {}
+		if Healium_RefreshAuraContainers then
+			Healium_RefreshAuraContainers()
+		end
 		return
 	end
 	
@@ -1295,7 +1303,6 @@ function Healium_OnEvent(frame, event, ...)
 
 		InitVariables()
 		Healium_InitSpells(HealiumClass, HealiumRace) 		
-		Healium_InitDebuffSound()		
 		Healium_CreateMiniMapButton()
 		Healium_UpdateShowMinimapButton()
 		Healium_CreateConfigPanel(HealiumClass, Healium_Version)
@@ -1311,7 +1318,6 @@ function Healium_OnEvent(frame, event, ...)
 		Healium_UpdateShowRaidIcons()
 		Healium_UpdateButtons()		
 		Healium_UpdateShowRole()	
-		Healium_ShowOneTimeDebuffWarningsMessage()
 		LoadedTime = GetTime()
 		return
 	end	
@@ -1340,21 +1346,4 @@ function Healium_OnEvent(frame, event, ...)
 
 		return
 	end
-end
-
-
-function Healium_ShowOneTimeDebuffWarningsMessage()
-
-		StaticPopupDialogs["HEALIUM_ONE_TIME_DEBUFF_WARNING_MSG"] = {
-			text = Healium_AddonColoredName .. " has added back Debuff warnings features. You may want to check " .. Healium_AddonColoredName.. " settings if you want to enable or disable these. Due to Blizzard's midnight changes, during combat addons can not detect the type of debuffs on players, so in combat we color debuffs as curses.",
-			button1 = "OK",
-			timeout = 0,
-			whileDead = true,
-			hideOnEscape = true,
-		}
-		
-		if not HealiumGlobal.ShownOneTimeDebuffWarningsMsg then 
-			StaticPopup_Show("HEALIUM_ONE_TIME_DEBUFF_WARNING_MSG")
-			HealiumGlobal.ShownOneTimeDebuffWarningsMsg = true
-		end
 end

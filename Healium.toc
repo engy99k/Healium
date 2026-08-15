@@ -5,6 +5,7 @@
 ## SavedVariablesPerCharacter: Healium
 ## Globe: check-classic
 ## IconTexture: Interface/Icons/Spell_Holy_LayOnHands
+## Dependencies: Blizzard_AuraContainer
 HealiumVersion.lua
 retail/Healium.lua
 retail/UIDropDownMenuTemplates.xml

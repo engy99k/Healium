@@ -1,3 +1,12 @@
+3.3.0
+Retail: Debuff warnings and Buffs now use the new Aura Containers
+Retail: Buffs now update during combat and dungeons and other restricted content
+Retail: Increased max buffs from 6 to 10 
+Retail: Added an option to show the debuff icon over the matching cure button
+Retail: Debuff audio warning removed due to not being possible to support :(
+Retail: Removed the one time debuff warning message
+Special thanks to Daminion1313 for assisting with these changes.
+
 3.2.9
 Retail: Fixed LUA errors with their recent 12.1 update.
 Retail: Buffs and Debuff warnings no longer function during combat since Blizzard made aura APIs heavy handedly generate LUA errors during combat.

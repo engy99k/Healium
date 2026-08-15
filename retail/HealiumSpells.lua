@@ -385,3 +385,18 @@ function Healium_DebugCures()
 	Healium_Print("CanCurePoison = " .. tostring(CanCurePoison))
 	Healium_Print("CanCureCurse = " .. tostring(CanCureCurse))
 end
+
+-- Returns the dispel types handled by a configured cure spell.  Retail 12.1
+-- Aura Containers can consume this non-aura configuration safely, allowing
+-- Blizzard to select the matching debuff without Healium reading aura data.
+function Healium_GetCureDispelTypes(spellName)
+	local cure = spellName and Cures[spellName]
+	if not cure then return nil end
+
+	local dispelTypes = {}
+	if GetCanCureMagic(cure) then dispelTypes.Magic = true end
+	if cure.CanCureDisease then dispelTypes.Disease = true end
+	if cure.CanCurePoison then dispelTypes.Poison = true end
+	if cure.CanCureCurse then dispelTypes.Curse = true end
+	return dispelTypes
+end

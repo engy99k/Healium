@@ -21,63 +21,337 @@ local GroupFramesWasShown = { }
 local TargetFrameWasShown = nil
 local FocusFrameWasShown = nil
 
-local MaxBuffs = 6
+local MaxBuffs = 10
 local xSpacing = 2
 local NamePlateHeight = 28
-local LastDebuffSoundTime = GetTime()
 
 local UnitFrames = { } -- table of all unit frames
 
 ClickCastFrames = ClickCastFrames or {} -- used by Clique and any other click cast frames
 
-local DebuffSoundPath
-
--- locale safe versions of spell names
-local RejuvenationGermination = Healium_GetSpellName(155777) -- Rejuvenation (Germination) is a buff when a druid with the Germination talent casts Rejuvenation on a target
-local EternalFlame = Healium_GetSpellName(156322) -- Eternal Flame is a buff when a paladin with the Eternal Flame talent casts Word of Glory on a target
-local Atonement = Healium_GetSpellName(81749) -- Atonement: Plea, Power Word: Shield, Shadow Mend, and Power Word: Radiance also apply Atonement to your target for 15 sec.\
-local GlimmerOfLight = Healium_GetSpellName(325983) -- Glimmer of Light is a buff when a paladin with the Glimmer of Light talent casts Holy Shock
-local Tranquility = Healium_GetSpellName(740) -- Tranquility - HOT from Druid casting Tranquility
-local TemporalBeaconName = Healium_GetSpellName(400735) -- Temporal Beacon
-
--- sounds ids from https://wow.tools/files/#search=&page=1&sort=0&desc=asc
-Healium_Sounds = {
-	{ ["Alliance Bell"] = { fileid = 566564, path = "Sound\\Doodad\\BellTollAlliance.ogg"}},
-	{ ["Bellow"] = { fileid = 566234, path = "Sound\\Doodad\\BellowIn.ogg" }},
-	{ ["Dwarf Horn"] = {fileid = 566064, path = "Sound\\Doodad\\DwarfHorn.ogg" }},
-	{ ["Gruntling Horn A"] = {retail = 1, fileid = 598076, path = "Sound\\Events\\gruntling_horn_aa.ogg" }},
-	{ ["Gruntling Horn B"] = {retail = 1, fileid = 598196, path = "Sound\\Events\\gruntling_horn_bb.ogg" }},
-	{ ["Horde Bell"] = { fileid = 565853, path = "Sound\\Doodad\\BellTollHorde.ogg" }},
-	{ ["Man Scream"] = { retail = 1, fileid = 598052, path = "Sound\\Events\\EbonHold_ManScream1_02.ogg" }},
-	{ ["Night Elf Bell"] = { fileid = 566558, path = "Sound\\Doodad\\BellTollNightElf.ogg" }},
-	{ ["Space Death"] = { retail = 1, fileid = 567198, path = "Sound\\Effects\\DeathImpacts\\SpaceDeathUni.ogg" }},
-	{ ["Tribal Bell"] = { fileid = 566027, path = "Sound\\Doodad\\BellTollTribal.ogg" }},
-	{ ["Wisp"] = { fileid = 567294, path = "Sound\\Event Sounds\\Wisp\\WispPissed2.ogg" }},
-	{ ["Woman Scream"] = { retail = 1, fileid = 598223, path = "Sound\\Events\\EbonHold_WomanScream1_02.ogg" }}
+-- Retail 12.1 makes indexed aura data unavailable whenever auras are secret
+-- (which includes more than combat). Aura Containers keep selection,
+-- visibility, icons, stacks, and cooldowns inside Blizzard code.
+local AuraContainerMinInterface = 120100
+local BuffAuraGroupKey = "HealiumPlayerBuffs"
+local HealthDebuffSlotKey = "HealiumHealthDebuff"
+local AuraContainersReported = false
+local AuraContainerFailureReported = false
+local AuraContainersAvailable
+local SpecialBuffSpellIDs = { 155777, 156322, 81749, 325983, 740, 400735 }
+local DispelColorMap = {
+	Magic = CreateColor(0.2, 0.6, 1.0),
+	Curse = CreateColor(0.6, 0.0, 1.0),
+	Disease = CreateColor(0.6, 0.4, 0.0),
+	Poison = CreateColor(0.0, 0.6, 0.0),
 }
 
-function Healium_GetSoundPath(sound)
-	for i,j in ipairs(Healium_Sounds) do
-		if sound == next(j, nil) then
-			return j[sound].fileid
+local function AurasAreRestricted()
+	return C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret()
+end
+
+function Healium_UsesAuraContainers()
+	if AuraContainersAvailable ~= nil then return AuraContainersAvailable end
+	local interfaceVersion = select(4, GetBuildInfo())
+	AuraContainersAvailable = type(interfaceVersion) == "number"
+		and interfaceVersion >= AuraContainerMinInterface
+		and C_XMLUtil and C_XMLUtil.GetTemplateInfo
+		and C_XMLUtil.GetTemplateInfo("CustomAuraContainerTemplate") ~= nil
+	return AuraContainersAvailable and true or false
+end
+
+local function QueueAuraContainerRefresh(frame)
+	if frame.AuraContainerRefreshPending then return end
+	frame.AuraContainerRefreshPending = true
+	table.insert(Healium_FixNameplates, frame)
+end
+
+local function SafeAuraContainerCall(frame, method, ...)
+	local ok = pcall(method, frame, ...)
+	return ok
+end
+
+local function AddDispelTintTexture(auraButton, texture)
+	local addTexture = auraButton.AddDispelTypeTexture or auraButton.SetAuraBorder
+	if not addTexture then return end
+	local style = Enum and Enum.CustomAuraButtonDispelTypeTextureStyle
+		and Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset
+	local options = {
+		showWhenHarmful = true,
+		showWhenHelpful = false,
+		customDispelColorMap = DispelColorMap,
+	}
+	if style ~= nil then options.style = style end
+	pcall(addTexture, auraButton, texture, options)
+end
+
+local function CreateTintedBorder(auraButton, storage)
+	local thickness = 2.5
+	local holder = CreateFrame("Frame", nil, auraButton)
+	holder:SetAllPoints(auraButton)
+	holder:EnableMouse(false)
+	table.insert(storage, holder)
+	local edges = {
+		{ first = "TOPLEFT", second = "TOPRIGHT", dimension = "height" },
+		{ first = "BOTTOMLEFT", second = "BOTTOMRIGHT", dimension = "height" },
+		{ first = "TOPLEFT", second = "BOTTOMLEFT", dimension = "width" },
+		{ first = "TOPRIGHT", second = "BOTTOMRIGHT", dimension = "width" },
+	}
+	for _, edge in ipairs(edges) do
+		local texture = holder:CreateTexture(nil, "OVERLAY")
+		texture:SetTexture("Interface\\Buttons\\WHITE8X8")
+		texture:SetPoint(edge.first, holder, edge.first, 0, 0)
+		texture:SetPoint(edge.second, holder, edge.second, 0, 0)
+		if edge.dimension == "height" then
+			texture:SetHeight(thickness)
+		else
+			texture:SetWidth(thickness)
+		end
+		AddDispelTintTexture(auraButton, texture)
+	end
+end
+
+local function SetVisualsAlpha(visuals, alpha)
+	if not visuals then return end
+	for _, visual in ipairs(visuals) do visual:SetAlpha(alpha) end
+end
+
+local function BuildBuffSpellFilter()
+	local includeSpellIDs = {}
+	local profile = Healium_GetProfile()
+	if profile and profile.SpellNames then
+		for i = 1, profile.ButtonCount or 0 do
+			local spellType = profile.SpellTypes and profile.SpellTypes[i]
+			if spellType == nil or spellType == Healium_Type_Spell then
+				local spellInfo = profile.SpellNames[i] and C_Spell.GetSpellInfo(profile.SpellNames[i])
+				if spellInfo and spellInfo.spellID then includeSpellIDs[spellInfo.spellID] = true end
+			end
 		end
 	end
-	
-	return nil
+	for _, spellID in ipairs(SpecialBuffSpellIDs) do includeSpellIDs[spellID] = true end
+	return includeSpellIDs
 end
 
-function Healium_InitDebuffSound()
-	DebuffSoundPath = Healium_GetSoundPath(Healium.DebufAudioFile)
-	
-	if DebuffSoundPath == nil then
-		Healium.DebufAudioFile = "Horde Bell"
-		DebuffSoundPath = Healium_GetSoundPath(Healium.DebufAudioFile)
+local function InitializeBuffAuraButton(auraButton)
+	auraButton:SetSize(24, 24)
+	local icon = auraButton:CreateTexture(nil, "ARTWORK")
+	icon:SetAllPoints(auraButton)
+	icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+	auraButton:SetIcon(icon)
+
+	local cooldown = CreateFrame("Cooldown", nil, auraButton, "CooldownFrameTemplate")
+	cooldown:SetAllPoints(auraButton)
+	cooldown:SetReverse(true)
+	cooldown:SetDrawEdge(true)
+	cooldown:SetHideCountdownNumbers(true)
+	auraButton:SetDurationCooldown(cooldown)
+
+	local count = auraButton:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+	count:SetPoint("BOTTOMRIGHT", auraButton, "BOTTOMRIGHT", -1, 0)
+	auraButton:SetApplicationCount(count, {})
+	if auraButton.SetTooltipAnchorPoint then auraButton:SetTooltipAnchorPoint("ANCHOR_LEFT") end
+end
+
+local function CreateBuffAuraContainer(frame, unit)
+	local ok, container = pcall(CreateFrame, "AuraContainer", nil, frame, "CustomAuraContainerTemplate")
+	if not ok or not container then return false end
+
+	container:SetSize(1, 1)
+	container:SetPoint("RIGHT", frame, "LEFT", -2, 0)
+	container:SetFrameLevel(frame:GetFrameLevel() + 20)
+	container:SetUnit(unit)
+	container:SetFlowLayoutAxis(AnchorUtil.FlowLayoutAxis.Horizontal)
+	container:SetFlowLayoutAnchorPoint("RIGHT")
+	container:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Left, AnchorUtil.FlowDirection.Down)
+	container:AddAuraGroup(BuffAuraGroupKey, "HELPFUL|PLAYER", {
+		maxFrameCount = MaxBuffs,
+		candidateFilters = { includeSpellIDs = BuildBuffSpellFilter() },
+		initializeFrame = InitializeBuffAuraButton,
+		layout = {
+			elementWidth = 24,
+			elementHeight = 24,
+			elementSpacing = xSpacing,
+			lineSpacing = 0,
+		},
+	})
+	container:SetEnabled(Healium.ShowBuffs and true or false)
+	frame.BuffAuraContainer = container
+	return true
+end
+
+local function InitializeHealthDebuffButton(frame)
+	return function(auraButton)
+		auraButton:SetSize(frame.HealthBar:GetWidth(), frame.HealthBar:GetHeight())
+		frame.DebuffHealthBorderTextures = {}
+		CreateTintedBorder(auraButton, frame.DebuffHealthBorderTextures)
+		SetVisualsAlpha(frame.DebuffHealthBorderTextures,
+			Healium.EnableDebufs and Healium.EnableDebufHealthbarHighlighting and 1 or 0)
+		local overlayHolder = CreateFrame("Frame", nil, auraButton)
+		overlayHolder:SetAllPoints(auraButton)
+		overlayHolder:EnableMouse(false)
+		local overlay = overlayHolder:CreateTexture(nil, "ARTWORK")
+		overlay:SetTexture("Interface\\Buttons\\WHITE8X8")
+		overlay:SetAllPoints(overlayHolder)
+		AddDispelTintTexture(auraButton, overlay)
+		frame.DebuffHealthColorHolder = overlayHolder
+		overlayHolder:SetAlpha(Healium.EnableDebufs and Healium.EnableDebufHealthbarColoring and 0.35 or 0)
+		auraButton:SetMouseMotionEnabled(false)
 	end
 end
 
-function Healium_PlayDebuffSound()
-	Healium_DebugPrint("playing sound " .. DebuffSoundPath)
-	PlaySoundFile(DebuffSoundPath)	
+local function InitializeCureDebuffButton(frame, index)
+	return function(auraButton)
+		local cureButton = frame.buttons and frame.buttons[index]
+		local width = cureButton and cureButton:GetWidth() or 28
+		local height = cureButton and cureButton:GetHeight() or 28
+		auraButton:SetSize(width, height)
+
+		frame.DebuffButtonBorderTextures[index] = {}
+		CreateTintedBorder(auraButton, frame.DebuffButtonBorderTextures[index])
+		SetVisualsAlpha(frame.DebuffButtonBorderTextures[index],
+			Healium.EnableDebufs and Healium.EnableDebufButtonHighlighting and 1 or 0)
+		local iconHolder = CreateFrame("Frame", nil, auraButton)
+		iconHolder:SetAllPoints(auraButton)
+		iconHolder:EnableMouse(false)
+		local icon = iconHolder:CreateTexture(nil, "ARTWORK")
+		icon:SetSize(width * 0.5, height * 0.5)
+		icon:SetPoint("CENTER", iconHolder, "CENTER")
+		icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+		auraButton:SetIcon(icon)
+		frame.DebuffButtonIconHolders[index] = iconHolder
+		iconHolder:SetAlpha(Healium.EnableDebufs and Healium.ShowDebuffIcon and 1 or 0)
+		if auraButton.SetTooltipAnchorPoint then auraButton:SetTooltipAnchorPoint("ANCHOR_RIGHT") end
+	end
+end
+
+local GetConfiguredCureTypes
+
+local function CreateDebuffAuraContainer(frame, unit)
+	local ok, container = pcall(CreateFrame, "AuraContainer", nil, frame, "CustomAuraContainerTemplate")
+	if not ok or not container then return false end
+
+	container:SetSize(1, 1)
+	container:SetPoint("CENTER", frame)
+	container:SetFrameLevel(frame:GetFrameLevel() + 25)
+	container:SetUnit(unit)
+	frame.DebuffButtonBorderTextures = {}
+	frame.DebuffButtonIconHolders = {}
+	local profile = Healium_GetProfile()
+	local configuredTypes = {}
+	local allCureTypes = {}
+	for i = 1, Healium_MaxButtons do
+		configuredTypes[i] = GetConfiguredCureTypes(profile, i)
+		for dispelType in pairs(configuredTypes[i]) do allCureTypes[dispelType] = true end
+	end
+
+	local healthSlot = container:AddAuraSlot(HealthDebuffSlotKey, "HARMFUL|RAID_PLAYER_DISPELLABLE", {
+		candidateFilters = { includeDispelTypes = Healium.EnableDebufs and allCureTypes or {} },
+		initializeFrame = InitializeHealthDebuffButton(frame),
+	})
+	healthSlot:SetPoint("CENTER", frame.HealthBar, "CENTER")
+	frame.DebuffHealthAuraButton = healthSlot
+
+	frame.DebuffButtonAuraButtons = {}
+	for i = 1, Healium_MaxButtons do
+		local slotKey = "HealiumCureDebuff" .. i
+		local auraButton = container:AddAuraSlot(slotKey, "HARMFUL|RAID_PLAYER_DISPELLABLE", {
+			candidateFilters = { includeDispelTypes = Healium.EnableDebufs and configuredTypes[i] or {} },
+			initializeFrame = InitializeCureDebuffButton(frame, i),
+		})
+		local cureButton = frame.buttons and frame.buttons[i]
+		if cureButton then auraButton:SetPoint("CENTER", cureButton, "CENTER") end
+		frame.DebuffButtonAuraButtons[i] = auraButton
+	end
+
+	frame.DebuffAuraContainer = container
+	container:SetEnabled(Healium.EnableDebufs and true or false)
+	return true
+end
+
+GetConfiguredCureTypes = function(profile, index)
+	if not profile or not profile.SpellNames then return {} end
+	local spellType = profile.SpellTypes and profile.SpellTypes[index]
+	if spellType ~= nil and spellType ~= Healium_Type_Spell then return {} end
+	return Healium_GetCureDispelTypes(profile.SpellNames[index]) or {}
+end
+
+local function RefreshFrameAuraContainers(frame)
+	if not frame or not frame.TargetUnit or not Healium_UsesAuraContainers() then return end
+	if not frame.buttons or not frame.buttons[1] then
+		QueueAuraContainerRefresh(frame)
+		return
+	end
+	local unit = frame.TargetUnit
+	local ok, created
+	if not frame.BuffAuraContainer then
+		ok, created = pcall(CreateBuffAuraContainer, frame, unit)
+	end
+	if not frame.BuffAuraContainer and (not ok or not created) then
+		if not AuraContainerFailureReported then
+			Healium_Warn("Retail buff Aura Container initialization failed: " .. tostring(created))
+			AuraContainerFailureReported = true
+		end
+		QueueAuraContainerRefresh(frame)
+		return
+	end
+	if not frame.DebuffAuraContainer then
+		ok, created = pcall(CreateDebuffAuraContainer, frame, unit)
+	end
+	if not frame.DebuffAuraContainer and (not ok or not created) then
+		if not AuraContainerFailureReported then
+			Healium_Warn("Retail debuff Aura Container initialization failed: " .. tostring(created))
+			AuraContainerFailureReported = true
+		end
+		QueueAuraContainerRefresh(frame)
+		return
+	end
+
+	local buffOK = SafeAuraContainerCall(frame.BuffAuraContainer, frame.BuffAuraContainer.SetUnit, unit)
+	local debuffOK = SafeAuraContainerCall(frame.DebuffAuraContainer, frame.DebuffAuraContainer.SetUnit, unit)
+	if not buffOK or not debuffOK then QueueAuraContainerRefresh(frame) end
+
+	if not InCombatLockdown() and not AurasAreRestricted() then
+		frame.BuffAuraContainer:SetAuraGroupCandidateFilters(BuffAuraGroupKey, { includeSpellIDs = BuildBuffSpellFilter() })
+		frame.BuffAuraContainer:SetEnabled(Healium.ShowBuffs and true or false)
+
+		local profile = Healium_GetProfile()
+		local allCureTypes = {}
+		for i = 1, Healium_MaxButtons do
+			local cureTypes = GetConfiguredCureTypes(profile, i)
+			for dispelType in pairs(cureTypes) do allCureTypes[dispelType] = true end
+			frame.DebuffAuraContainer:SetAuraSlotCandidateFilters("HealiumCureDebuff" .. i,
+				{ includeDispelTypes = Healium.EnableDebufs and cureTypes or {} })
+			SetVisualsAlpha(frame.DebuffButtonBorderTextures[i],
+				Healium.EnableDebufs and Healium.EnableDebufButtonHighlighting and 1 or 0)
+			if frame.DebuffButtonIconHolders[i] then
+				frame.DebuffButtonIconHolders[i]:SetAlpha(Healium.EnableDebufs and Healium.ShowDebuffIcon and 1 or 0)
+			end
+		end
+		frame.DebuffAuraContainer:SetAuraSlotCandidateFilters(HealthDebuffSlotKey,
+			{ includeDispelTypes = Healium.EnableDebufs and allCureTypes or {} })
+		frame.DebuffAuraContainer:SetEnabled(Healium.EnableDebufs and true or false)
+		SetVisualsAlpha(frame.DebuffHealthBorderTextures,
+			Healium.EnableDebufs and Healium.EnableDebufHealthbarHighlighting and 1 or 0)
+		if frame.DebuffHealthColorHolder then
+			frame.DebuffHealthColorHolder:SetAlpha(Healium.EnableDebufs and Healium.EnableDebufHealthbarColoring and 0.35 or 0)
+		end
+		frame.AuraContainerRefreshPending = nil
+	else
+		QueueAuraContainerRefresh(frame)
+	end
+end
+
+function Healium_RefreshAuraContainers()
+	if not Healium_UsesAuraContainers() then return end
+	local initialized = false
+	for _, frame in ipairs(Healium_Frames) do
+		RefreshFrameAuraContainers(frame)
+		if frame.BuffAuraContainer and frame.DebuffAuraContainer then initialized = true end
+	end
+	if initialized and not AuraContainersReported then
+		Healium_Print("Retail aura displays initialized.")
+		AuraContainersReported = true
+	end
 end
 
 local function CreateButton(ButtonName,ParentFrame,xoffset)
@@ -442,23 +716,6 @@ function HealiumUnitFrames_Button_OnLoad(frame)
 		ClickCastFrames[frame] = true	
 	end
 
-	-- configure buff frames
-	frame.buffs = { }	
-
-	local framename = frame:GetName()	
-	for i=1, MaxBuffs, 1 do
-		local buffframe = _G[framename.."_Buff"..i]
-		local name = buffframe:GetName()
-		buffframe.icon = _G[name.."Icon"]
-		buffframe.cooldown = _G[name.."Cooldown"]
-		buffframe.count = _G[name.."Count"]
-		buffframe.border = _G[name.."Border"]
-		buffframe.id = i
-		frame.buffs[i] = buffframe
-	end
-
-	local framename = frame:GetName()	
-
 	if InCombatLockdown() then
 		frame.fixCreateButtons = true
 		table.insert(Healium_FixNameplates, frame)
@@ -508,10 +765,6 @@ function HealiumUnitFrames_Button_OnAttributeChanged(frame, name, value)
 			
 			table.insert(Healium_Units[newUnit], frame)
 
-			for i =1, MaxBuffs, 1 do
-				frame.buffs[i].unit = newUnit
-			end
-			
 			Healium_UpdateManaBarVisibility(frame) -- This is important to do here.
 			Healium_UpdateUnitName(newUnit, frame)
 			Healium_UpdateUnitHealth(newUnit, frame)
@@ -533,6 +786,7 @@ function HealiumUnitFrames_Button_OnAttributeChanged(frame, name, value)
 		end
 	
 		frame.TargetUnit = newUnit
+		if newUnit then RefreshFrameAuraContainers(frame) end
 	end
 end
 
@@ -888,169 +1142,22 @@ function Healium_MakeRankedSpellName(spellName, spellSubtext)
 	return rankedSpellName
 end
 
-function Healium_UpdateUnitBuffs(unit, frame)
-
-	if InCombatLockdown() then
-		return -- even calling C_UnitAuras.GetBuffDataByIndex during combat will generate a LUA error now
-	end
-	
-	local buffIndex = 1
-	local Profile = Healium_GetProfile()
-
-	if Healium.ShowBuffs then
-		for i=1, 100, 1 do
-			local aura = C_UnitAuras.GetBuffDataByIndex(unit, i, "HELPFUL|PLAYER")
-
-			if aura then 
-				if not issecretvalue(aura.name) then
-					local name = aura.name
-					local armed = false
-					
-					for j=1, Profile.ButtonCount, 1 do
-						if Profile.SpellNames[j] == name or name == RejuvenationGermination or name == EternalFlame or name == Atonement or name == GlimmerOfLight or name == Tranquility or name == TemporalBeaconName then
-							armed = true
-							break
-						end
-					end
-					
-					if armed == true then
-						local buffFrame = frame.buffs[buffIndex]
-					
-						if buffFrame and not buffFrame.icon then
-							buffFrame:SetSize(24, 24)
-
-							-- Create missing texture
-							buffFrame.icon = buffFrame:CreateTexture(nil, "BACKGROUND")
-							buffFrame.icon:SetAllPoints()
-
-							-- Create missing stack count fontstring
-							buffFrame.count = buffFrame:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
-							buffFrame.count:SetPoint("BOTTOMRIGHT", buffFrame, "BOTTOMRIGHT", -1, 0)
-							buffFrame.count:SetJustifyH("RIGHT")
-
-							-- Create missing cooldown frame
-							buffFrame.cooldown = CreateFrame("Cooldown", nil, buffFrame, "CooldownFrameTemplate")
-							buffFrame.cooldown:SetAllPoints()
-							buffFrame.cooldown:SetReverse(true)
-							buffFrame.cooldown:SetDrawEdge(true)
-							
-							-- HIDE THE GIANT COOLDOWN NUMBERS ("4", "1h")
-							buffFrame.cooldown:SetHideCountdownNumbers(true)
-						end				
-
-
-						buffFrame:SetID(i)
-						buffFrame.auraInstanceID = aura.auraInstanceID
-						buffFrame.icon:SetTexture(aura.icon)
-
-						if aura.applications and aura.applications > 1 then
-							buffFrame.count:SetText(aura.applications)
-							buffFrame.count:Show()
-						else
-							buffFrame.count:Hide()
-						end
-						
-						if aura.duration and aura.duration > 0 then
-							local startTime = aura.expirationTime - aura.duration
-							buffFrame.cooldown:SetCooldown(startTime, aura.duration)
-							buffFrame.cooldown:Show()
-						else
-							buffFrame.cooldown:Hide()
-						end
-
-						buffFrame:Show()
-						buffIndex = buffIndex + 1					
-						if buffIndex > MaxBuffs then
-							break
-						end			
-					end
-				end
-			else
-				break
-			end
-		end
-	end
-
-	-- hide remainder buff frames
-	for i = buffIndex, MaxBuffs, 1 do
-		frame.buffs[i]:Hide()
-	end
-	
--- Handle affliction notification
-	if Healium.EnableDebufs and frame:IsVisible() then
-	
-		local foundDebuff = false
-		local debuffTypes = { } 
-		
-		for i = 1, 40, 1 do
-			local aura = C_UnitAuras.GetDebuffDataByIndex(unit, i, "RAID_PLAYER_DISPELLABLE")
-			if aura == nil then break end
-			foundDebuff = true
-			local debuffType 
-			
-			if issecretvalue(aura.dispelName) then
-				debuffType = "Secret"
-			else
-				debuffType = aura.dispelName
-			end
-				
-			if debuffType ~= nil then
-				debuffTypes[debuffType] = true
-				local debuffColor = Healium_DebuffTypeColor[debuffType] or Healium_DebuffTypeColor["none"];					
-				frame.hasDebuf = true
-				frame.debuffColor = debuffColor
-				
-				if Healium.EnableDebufHealthbarHighlighting then
-					frame.CurseBar:SetBackdropBorderColor(debuffColor.r, debuffColor.g, debuffColor.b)
-					frame.CurseBar:SetAlpha(1)
-				end	
-				
-				if Healium.EnableDebufAudio then 
-					local now = GetTime()
-					-- UnitInRange will return false for "player"
-					local inRange = UnitInRange(unit)
-					
-					if issecretvalue(inRange) then 
-						inRange = true
-					end
-					
-					local isGroupUnit = unit == "player" or UnitInParty(unit) or UnitInRaid(unit)
-
-					if isGroupUnit and (unit == "player" or inRange) then
-						if now > (LastDebuffSoundTime + 7) then
-							Healium_PlayDebuffSound()
-							LastDebuffSoundTime = now
-						end
-					end
-				end
-			end
-		end
-		
-		if (not foundDebuff) and frame.hasDebuf then
-			frame.CurseBar:SetAlpha(0)
-			frame.hasDebuf = nil
-		end
-		
-		if Healium.EnableDebufButtonHighlighting then 
-			Healium_ShowDebuffButtons(Profile, frame, debuffTypes)		
-		end
-		
-		Healium_UpdateUnitHealth(unit, frame)
-	end	
-	
-end
-
 function Healium_UpdateEnableDebuffs()
-	for _,j in pairs(UnitFrames) do
-		if j.hasDebuf then
+	if Healium_UsesAuraContainers() then
+		Healium_RefreshAuraContainers()
+		return
+	end
+
+	for _,frame in pairs(UnitFrames) do
+		if frame.hasDebuf then
 			frame.CurseBar:SetAlpha(0)
 			frame.hasDebuf = nil
 			
 			for i=1, Healium_MaxButtons, 1 do
-				local button = frame.button[i]
+				local button = frame.buttons[i]
 				if button then
-					button.curseBar:SetAlpha(0)
-					button.curseBar.hasDebuf = nil
+					button.CurseBar:SetAlpha(0)
+					button.CurseBar.hasDebuf = nil
 				end
 			end
 		end	
