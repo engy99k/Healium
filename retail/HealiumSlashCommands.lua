@@ -18,7 +18,7 @@ local function printUsage()
 	Healium_Print(Healium_AddonName .. " Commands")  
 	Healium_Print(Healium_Slash .. " - Shows " .. Healium_AddonName .. " commands.  (what you see here)")
 	Healium_Print(Healium_Slash .. " config - Shows the " .. Healium_AddonName .. " config panel")		
-	Healium_Print(Healium_Slash .. " show [party | pets | me | tanks | 1-8] - Shows the corresponding " .. Healium_AddonName .. " frame")
+	Healium_Print(Healium_Slash .. " show [party | pets | me | friends | damagers | healers | tanks | target | focus | 1-8] - Shows the corresponding " .. Healium_AddonName .. " frame")
 	Healium_Print(Healium_Slash .. " toggle - Shows or Hides the current " .. Healium_AddonName .. " frames.")
 	Healium_Print(Healium_Slash .. " reset frames - Resets the positions of all " .. Healium_AddonName .. " frames")	
 	Healium_Print(Healium_Slash .. " friends add [name or Target] - Adds name to the " .. Healium_AddonName .. " friends list.")	
@@ -99,7 +99,8 @@ setmetatable(showHandlers, mt)
 
 -- handles /hlm show
 local function doShow(args)
-	if args == nil then
+	args = args and strtrim(string.lower(args)) or nil
+	if args == nil or args == "" then
 		Healium_ShowHidePartyFrame(true)
 		return
 	end
@@ -229,12 +230,13 @@ setmetatable(friendsHandlers, mt)
 
 --handles /hlm friends
 local function doFriends(val)
-	if val == nil then
+	val = val and strtrim(val) or nil
+	if val == nil or val == "" then
 		doFriendsShow()
 		return
 	end
 	
-	local switch = val:match("([^ ]+)")
+	local switch = string.lower(val:match("([^ ]+)"))
 	local args = val:match("[^ ]+ (.+)")	
 
 	return friendsHandlers[switch](args)
@@ -256,8 +258,12 @@ setmetatable(handlers, mt)
 
 -- handles the slash commands for this addon
 function Healium_SlashCmdHandler(cmd)
-	local switch = cmd:match("([^ ]+)")
-	local args = cmd:match("[^ ]+ (.+)")	
+	cmd = strtrim(cmd or "")
+	if cmd == "" then
+		return printUsage()
+	end
+
+	local switch = string.lower(cmd:match("([^ ]+)"))
+	local args = cmd:match("[^ ]+%s+(.+)")
 	return handlers[switch](args)
 end
-

@@ -923,9 +923,17 @@ function Healium_ToggleAllFrames(forceHide, silent)
 	end
 end
 
+local function CanChangeFrameVisibility()
+	if InCombatLockdown() then
+		Healium_Warn("Can't show or hide frames while in combat.")
+		return false
+	end
+	return true
+end
+
 function Healium_ShowHidePartyFrame(show)
 	if PartyFrame == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowPartyFrame = show end
 	
 	if Healium.ShowPartyFrame then
@@ -937,7 +945,7 @@ end
 
 function Healium_ShowHidePetsFrame(show)
 	if PetsFrame == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowPetsFrame = show end
 	
 	if Healium.ShowPetsFrame then
@@ -949,7 +957,7 @@ end
 
 function Healium_ShowHideMeFrame(show)
 	if MeFrame == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowMeFrame = show end
 	
 	if Healium.ShowMeFrame then
@@ -961,7 +969,7 @@ end
 
 function Healium_ShowHideFriendsFrame(show)
 	if FriendsFrame == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowFriendsFrame = show end
 	
 	if Healium.ShowFriendsFrame then
@@ -973,7 +981,7 @@ end
 
 function Healium_ShowHideDamagersFrame(show)
 	if DamagersFrame == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowDamagersFrame = show end
 	
 	if Healium.ShowDamagersFrame then
@@ -985,7 +993,7 @@ end
 
 function Healium_ShowHideHealersFrame(show)
 	if HealersFrame == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowHealersFrame = show end
 	
 	if Healium.ShowHealersFrame then
@@ -997,7 +1005,7 @@ end
 
 function Healium_ShowHideTanksFrame(show)
 	if TanksFrame == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowTanksFrame = show end
 	
 	if Healium.ShowTanksFrame then
@@ -1009,7 +1017,7 @@ end
 
 function Healium_ShowHideTargetFrame(show)
 	if TargetFrame == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowTargetFrame = show end
 	
 	if Healium.ShowTargetFrame then
@@ -1023,7 +1031,7 @@ end
 
 function Healium_ShowHideFocusFrame(show)
 	if FocusFrame == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowFocusFrame = show end
 	
 	if Healium.ShowFocusFrame then
@@ -1038,7 +1046,7 @@ end
 function Healium_ShowHideGroupFrame(group, show)
 	if GroupFrames == nil then return end 
 	if GroupFrames[group] == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	if (show ~= nil) then Healium.ShowGroupFrames[group] = show end
 	
 	if Healium.ShowGroupFrames[group] then
@@ -1049,7 +1057,7 @@ function Healium_ShowHideGroupFrame(group, show)
 end
 
 function Healium_HideAllRaidFrames()
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 --	TanksFrame:Hide()
 	for i,j in ipairs(GroupFrames) do
 		if j ~= nil then 
@@ -1063,14 +1071,14 @@ end
 		
 function Healium_Show10ManRaidFrames()
 	if (GroupFrames == nil) or (GroupFrames[1]) == nil or (GroupFrames[2]) == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	GroupFrames[1]:Show()
 	GroupFrames[2]:Show()
 end
 
 function Healium_Show25ManRaidFrames()
 	if GroupFrames == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	for i=1, 5, 1 do
 		if GroupFrames[i] ~= nil then 
 			GroupFrames[i]:Show()
@@ -1080,7 +1088,7 @@ end
 
 function Healium_Show40ManRaidFrames()
 	if GroupFrames == nil then return end
-	if InCombatLockdown() then return end
+	if not CanChangeFrameVisibility() then return end
 	for i=1, 8, 1 do
 		if GroupFrames[i] ~= nil then 	
 			GroupFrames[i]:Show()

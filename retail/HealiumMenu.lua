@@ -245,8 +245,6 @@ local function HealiumMenu_InitializeDropDown(frame,level)
 					notCheckable = 1,					
 					func = ShowFriendsFrame,
 				},
--- TODO DAMAGERS/HEALERS frame	
---[[
 				{	-- Damagers Frame
 					text = "Show Damagers",
 					notCheckable = 1,					
@@ -257,7 +255,6 @@ local function HealiumMenu_InitializeDropDown(frame,level)
 					notCheckable = 1,					
 					func = ShowHealersFrame,
 				},
---]]				
 				{	-- Tanks Frame
 					text = "Show Tanks",
 					notCheckable = 1,					
