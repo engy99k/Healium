@@ -210,6 +210,31 @@
 					</OnShow>
 				</Scripts>			
 			</StatusBar>
+			<Frame parentKey="PredictionClipFrame">
+				<Size x="111" y="24"/>
+				<Frames>
+					<StatusBar parentKey="PredictBar" minValue="0" maxValue="100" defaultValue="0" hidden="true">
+						<Size x="111" y="24"/>
+						<BarTexture file="Interface\TargetingFrame\UI-StatusBar" />
+						<BarColor r="0.0" g="0.45" b="0.25" a="1.0"/>
+						<Scripts>
+							<OnLoad>
+								local unitFrame = self:GetParent():GetParent();
+								self:SetPoint("TOPLEFT", unitFrame.HealthBar:GetStatusBarTexture(), "TOPRIGHT", 0, 0);
+								self:SetFrameLevel(unitFrame:GetFrameLevel() + 1);
+							</OnLoad>
+						</Scripts>
+					</StatusBar>
+				</Frames>
+				<Scripts>
+					<OnLoad>
+						local unitFrame = self:GetParent();
+						self:SetAllPoints(unitFrame.HealthBar);
+						self:SetClipsChildren(true);
+						unitFrame.PredictBar = self.PredictBar;
+					</OnLoad>
+				</Scripts>
+			</Frame>
 			<StatusBar parentKey="ManaBar" minValue="0" maxValue="100" defaultValue="100">
 				<Size x="5" y="24"/>
 				<Layers>
@@ -294,7 +319,6 @@
 					edgeSize = 12,
 					insets = {left = 0, right = 0, top = 0, bottom = 0},
 				})		
-				
 				HealiumUnitFrames_Button_OnLoad(self)
 			</OnLoad>
 			<OnShow>HealiumUnitFrames_Button_OnShow(self)</OnShow>

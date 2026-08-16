@@ -153,6 +153,11 @@ local function ShowRoleCheck_OnClick(frame)
 	Healium_UpdateShowRole()
 end
 
+local function ShowIncomingHealsCheck_OnClick(frame)
+	Healium.ShowIncomingHeals = frame:GetChecked() or false
+	Healium_UpdateShowIncomingHeals()
+end
+
 local function ShowRaidIconsCheck_OnClick(frame)
 	Healium_DebugPrint("ShowRaidIconsCheck_OnClick")
 	Healium.ShowRaidIcons = frame:GetChecked() or false
@@ -374,10 +379,13 @@ function Healium_CreateConfigPanel(Class, Version)
 		"Shows unit's role icon (healer, tank, damage) when in random dungeons.  Will override Health Percentage text when unit is assigned a role.", "Show Role Icons")
 	ShowRoleCheck:SetScript("OnClick", ShowRoleCheck_OnClick)	
 
-	local NextParent = ShowRoleCheck
+	-- Show Incoming Heals check button
+	local ShowIncomingHealsCheck = CreateCheck("$parentShowIncomingHealsCheckButton",scrollchild,ShowRoleCheck,
+		"Shows incoming heals as a dark green bar extending from the unit's current health.", "Show Incoming Heals")
+	ShowIncomingHealsCheck:SetScript("OnClick", ShowIncomingHealsCheck_OnClick)
 
 	-- Show Raid Icons check button
-	local ShowRaidIconsCheck = CreateCheck("$parentShowRaidIconsCheckButton",scrollchild,NextParent, "Shows the raid icon assigned to this unit.", "Show Raid Icons")
+	local ShowRaidIconsCheck = CreateCheck("$parentShowRaidIconsCheckButton",scrollchild,ShowIncomingHealsCheck, "Shows the raid icon assigned to this unit.", "Show Raid Icons")
 	ShowRaidIconsCheck:SetScript("OnClick", ShowRaidIconsCheck_OnClick)	
 	
 	-- Uppercase names check button
@@ -808,6 +816,7 @@ function Healium_CreateConfigPanel(Class, Version)
 	ShowThreatCheck:SetChecked(Healium.ShowThreat)
 
 	ShowRoleCheck:SetChecked(Healium.ShowRole)	
+	ShowIncomingHealsCheck:SetChecked(Healium.ShowIncomingHeals)
 	Healium_ShowFocusCheck:SetChecked(Healium.ShowFocusFrame)		
 	
 	ShowRaidIconsCheck:SetChecked(Healium.ShowRaidIcons)

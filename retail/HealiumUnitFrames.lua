@@ -218,6 +218,9 @@ local function InitializeCureDebuffButton(frame, index)
 		icon:SetPoint("CENTER", iconHolder, "CENTER")
 		icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 		auraButton:SetIcon(icon)
+		local count = iconHolder:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+		count:SetPoint("BOTTOMRIGHT", icon, "BOTTOMRIGHT", 1, -1)
+		auraButton:SetApplicationCount(count, {})
 		frame.DebuffButtonIconHolders[index] = iconHolder
 		iconHolder:SetAlpha(Healium.EnableDebufs and Healium.ShowDebuffIcon and 1 or 0)
 		if auraButton.SetTooltipAnchorPoint then auraButton:SetTooltipAnchorPoint("ANCHOR_RIGHT") end
@@ -709,6 +712,7 @@ end
 function HealiumUnitFrames_Button_OnLoad(frame)
 	frame.buttons = { }
 	frame:RegisterForClicks("AnyUp", "AnyDown")	
+	frame.PredictBar:SetShown(Healium.ShowIncomingHeals and true or false)
 	
 	table.insert(Healium_Frames, frame)
 	

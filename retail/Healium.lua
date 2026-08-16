@@ -78,7 +78,7 @@ local HealiumDefaults = {
   ShowMana = true,								-- Whether or not to show mana
   ShowThreat = true,							-- Whether or not to show the threat warnings
   ShowRole = true,								-- Whether or not to show the role icon
-  --ShowIncomingHeals = true,					-- Whether or not to show incoming heals
+  ShowIncomingHeals = true,						-- Whether or not to show incoming heals
   ShowRaidIcons = true,							-- Whether or not to show raid icons
   UppercaseNames = true,						-- Whether or not to show names in UPPERCASE
   ShowMinimapButton = true,						-- Whether or not to show the minimap button
@@ -277,6 +277,7 @@ function Healium_OnLoad(frame)
 	HealiumFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 	HealiumFrame:RegisterEvent("SPELLS_CHANGED")
 	HealiumFrame:RegisterEvent("UNIT_HEALTH")
+	HealiumFrame:RegisterEvent("UNIT_MAXHEALTH")
 	HealiumFrame:RegisterEvent("PET_BATTLE_OPENING_START")
 	HealiumFrame:RegisterEvent("PET_BATTLE_CLOSE")
 	HealiumFrame:RegisterEvent("UNIT_SPELLCAST_SENT")	
@@ -371,6 +372,19 @@ function Healium_UpdateUnitHealth(unitName, NamePlate)
 	
 	NamePlate.HealthBar:SetMinMaxValues(0,MaxHealth)
 	NamePlate.HealthBar:SetValue(Health)
+
+	if Healium.ShowIncomingHeals then
+		-- Secret combat values can be passed directly to StatusBar widgets, but
+		-- must not be inspected or combined in Lua.
+		local IncomingHealth = UnitGetIncomingHeals(unitName)
+		NamePlate.PredictBar:Show()
+		NamePlate.PredictBar:SetMinMaxValues(0, MaxHealth)
+		if issecretvalue(IncomingHealth) then
+			NamePlate.PredictBar:SetValue(IncomingHealth)
+		else
+			NamePlate.PredictBar:SetValue(IncomingHealth or 0)
+		end
+	end
 	
 	if Healium.EnableDebufs and Healium.EnableDebufHealthbarColoring and NamePlate.hasDebuf then
 		NamePlate.HealthBar:SetStatusBarColor(NamePlate.debuffColor.r, NamePlate.debuffColor.g, NamePlate.debuffColor.b)	
@@ -464,10 +478,12 @@ function Healium_UpdateManaBarVisibility(frame)
 		frame.ManaBar:Show()
 		frame.HealthBar:SetWidth(111)
 		frame.HealthBar:SetPoint("TOPLEFT", 7, -2)
+		frame.PredictBar:SetWidth(111)
 	else
 		frame.ManaBar:Hide()
 		frame.HealthBar:SetWidth(116)			
 		frame.HealthBar:SetPoint("TOPLEFT", 2, -2)
+		frame.PredictBar:SetWidth(116)
 	end		
 	
 	Healium_UpdateUnitHealth(frame.TargetUnit, frame)
@@ -475,6 +491,23 @@ end
 
 function Healium_UpdateShowBuffs()
 	Healium_RefreshAuraContainers()
+end
+
+function Healium_UpdateShowIncomingHeals()
+	if Healium.ShowIncomingHeals then
+		HealiumFrame:RegisterEvent("UNIT_HEAL_PREDICTION")
+	else
+		HealiumFrame:UnregisterEvent("UNIT_HEAL_PREDICTION")
+	end
+
+	for _, frame in ipairs(Healium_Frames) do
+		if Healium.ShowIncomingHeals then
+			frame.PredictBar:Show()
+			Healium_UpdateUnitHealth(frame.TargetUnit, frame)
+		else
+			frame.PredictBar:Hide()
+		end
+	end
 end
 
 function Healium_UpdateUnitThreat(unitName, NamePlate)
@@ -1138,7 +1171,7 @@ function Healium_OnEvent(frame, event, ...)
 	-------------------------------------------------------------
 	-- [[ Update Unit Health Display Whenever Their HP Changes ]]
 	-------------------------------------------------------------
-    if (event == "UNIT_HEALTH") or (event == "UNIT_HEAL_PREDICTION") or (event == "UNIT_HEALTH_FREQUENT")  then
+    if (event == "UNIT_HEALTH") or (event == "UNIT_MAXHEALTH") or (event == "UNIT_HEAL_PREDICTION") or (event == "UNIT_HEALTH_FREQUENT")  then
 --		if (not HealiumActive) then return 0 end
 		
 		if Healium_Units[arg1] then
@@ -1312,6 +1345,7 @@ function Healium_OnEvent(frame, event, ...)
 		Healium_SetScale()		
 		Healium_UpdateClassColors()
 		Healium_UpdateShowMana()
+		Healium_UpdateShowIncomingHeals()
 		Healium_UpdateShowBuffs()
 		Healium_UpdateFriends()
 		Healium_UpdateShowThreat()

@@ -1,3 +1,14 @@
+3.3.2
+Retail: Added back Heal Prediction and the "Show Incoming Heals" checkbox.
+Retail: The debuff icon on heal button (added in 3.3.0) now shows number of applications of the debuff.
+
+3.3.1
+Retail: Added "Show Damagers" and "Show Healers" in the right-click frame menu.
+Retail: Added all supported frame names to /hlm help.
+Retail: Made slash commands ignore capitalization and surrounding whitespace.
+Retail: Fixed bare /hlm so it reliably displays help.
+Retail: Frame show commands now display a warning during combat
+
 3.3.0
 Retail: Debuff warnings and Buffs now use the new Aura Containers
 Retail: Buffs now update during combat and dungeons and other restricted content
