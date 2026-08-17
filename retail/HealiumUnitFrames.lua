@@ -35,10 +35,15 @@ ClickCastFrames = ClickCastFrames or {} -- used by Clique and any other click ca
 local AuraContainerMinInterface = 120100
 local BuffAuraGroupKey = "HealiumPlayerBuffs"
 local HealthDebuffSlotKey = "HealiumHealthDebuff"
+local ExcludedSystemBuffSpellIDs = {
+	[225788] = true, -- Sign of the Emissary
+	[404464] = true, -- Flight Style: Skyriding
+	[404468] = true, -- Flight Style: Steady
+	[430191] = true, -- Warband Mentored Leveling
+}
 local AuraContainersReported = false
 local AuraContainerFailureReported = false
 local AuraContainersAvailable
-local SpecialBuffSpellIDs = { 155777, 156322, 81749, 325983, 740, 400735 }
 local DispelColorMap = {
 	Magic = CreateColor(0.2, 0.6, 1.0),
 	Curse = CreateColor(0.6, 0.0, 1.0),
@@ -116,22 +121,6 @@ local function SetVisualsAlpha(visuals, alpha)
 	for _, visual in ipairs(visuals) do visual:SetAlpha(alpha) end
 end
 
-local function BuildBuffSpellFilter()
-	local includeSpellIDs = {}
-	local profile = Healium_GetProfile()
-	if profile and profile.SpellNames then
-		for i = 1, profile.ButtonCount or 0 do
-			local spellType = profile.SpellTypes and profile.SpellTypes[i]
-			if spellType == nil or spellType == Healium_Type_Spell then
-				local spellInfo = profile.SpellNames[i] and C_Spell.GetSpellInfo(profile.SpellNames[i])
-				if spellInfo and spellInfo.spellID then includeSpellIDs[spellInfo.spellID] = true end
-			end
-		end
-	end
-	for _, spellID in ipairs(SpecialBuffSpellIDs) do includeSpellIDs[spellID] = true end
-	return includeSpellIDs
-end
-
 local function InitializeBuffAuraButton(auraButton)
 	auraButton:SetSize(24, 24)
 	local icon = auraButton:CreateTexture(nil, "ARTWORK")
@@ -152,6 +141,15 @@ local function InitializeBuffAuraButton(auraButton)
 	if auraButton.SetTooltipAnchorPoint then auraButton:SetTooltipAnchorPoint("ANCHOR_LEFT") end
 end
 
+local function GetBuffAuraLayout()
+	return {
+		elementWidth = 24,
+		elementHeight = 24,
+		elementSpacing = xSpacing,
+		lineSpacing = 0,
+	}
+end
+
 local function CreateBuffAuraContainer(frame, unit)
 	local ok, container = pcall(CreateFrame, "AuraContainer", nil, frame, "CustomAuraContainerTemplate")
 	if not ok or not container then return false end
@@ -165,14 +163,9 @@ local function CreateBuffAuraContainer(frame, unit)
 	container:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Left, AnchorUtil.FlowDirection.Down)
 	container:AddAuraGroup(BuffAuraGroupKey, "HELPFUL|PLAYER", {
 		maxFrameCount = MaxBuffs,
-		candidateFilters = { includeSpellIDs = BuildBuffSpellFilter() },
+		candidateFilters = { excludeSpellIDs = ExcludedSystemBuffSpellIDs },
 		initializeFrame = InitializeBuffAuraButton,
-		layout = {
-			elementWidth = 24,
-			elementHeight = 24,
-			elementSpacing = xSpacing,
-			lineSpacing = 0,
-		},
+		layout = GetBuffAuraLayout(),
 	})
 	container:SetEnabled(Healium.ShowBuffs and true or false)
 	frame.BuffAuraContainer = container
@@ -314,7 +307,6 @@ local function RefreshFrameAuraContainers(frame)
 	if not buffOK or not debuffOK then QueueAuraContainerRefresh(frame) end
 
 	if not InCombatLockdown() and not AurasAreRestricted() then
-		frame.BuffAuraContainer:SetAuraGroupCandidateFilters(BuffAuraGroupKey, { includeSpellIDs = BuildBuffSpellFilter() })
 		frame.BuffAuraContainer:SetEnabled(Healium.ShowBuffs and true or false)
 
 		local profile = Healium_GetProfile()
