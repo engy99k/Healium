@@ -1,3 +1,6 @@
+3.3.4
+Retail: Improved buff filtering to reduce clutter on your own frames while continuing to show helpful buffs on other players, including corrected Atonement tracking.
+
 3.3.3
 Retail: Buffs should now include more talent and proc-generated effects. It's going to show a lot of extra buffs on yourself. We filtered some of these but may need to filter more in the future.
 
