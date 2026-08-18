@@ -250,6 +250,7 @@ function Healium_InitSpells(class, race)
 		AddSpell(116694) 	-- Surging Mist
 		AddSpell(115175)	-- Soothing Mist
 		AddSpell(115151)	-- Renewing Mist
+		AddSpell(116841)	-- Tiger's Lust
 		AddSpell(116849)	-- Life Cocoon
 		AddSpell(124682) 	-- Enveloping Mist
 --		AddSpell(115310)	-- Revival (has cures, but is AOE)

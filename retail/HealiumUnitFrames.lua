@@ -46,6 +46,9 @@ local SpecialPlayerBuffSpellIDs = {
 	54149,  -- Infusion of Light
 	465,    -- Devotion Aura
 }
+local PlayerBuffAuraAliases = {
+	[115151] = { 119611 }, -- Renewing Mist: cast spell and applied HoT use different IDs
+}
 local AuraContainersReported = false
 local AuraContainerFailureReported = false
 local AuraContainersAvailable
@@ -141,7 +144,13 @@ local function BuildPlayerBuffSpellFilter()
 			local spellType = profile.SpellTypes and profile.SpellTypes[i]
 			if spellType == nil or spellType == Healium_Type_Spell then
 				local spellInfo = profile.SpellNames[i] and C_Spell.GetSpellInfo(profile.SpellNames[i])
-				if spellInfo and spellInfo.spellID then includeSpellIDs[spellInfo.spellID] = true end
+				if spellInfo and spellInfo.spellID then
+					includeSpellIDs[spellInfo.spellID] = true
+					local auraAliases = PlayerBuffAuraAliases[spellInfo.spellID]
+					if auraAliases then
+						for _, auraSpellID in ipairs(auraAliases) do includeSpellIDs[auraSpellID] = true end
+					end
+				end
 			end
 		end
 	end

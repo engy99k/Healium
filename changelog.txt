@@ -1,32 +1,36 @@
+3.3.5
+* Retail: Renewing Mist now displays correctly in the player's buff list.
+* Retail: Added Tiger's Lust to the default Monk spell list.
+
 3.3.4
-Retail: Improved buff filtering to reduce clutter on your own frames while continuing to show helpful buffs on other players, including corrected Atonement tracking.
+* Retail: Improved buff filtering to reduce clutter on your own frames while continuing to show helpful buffs on other players, including corrected Atonement tracking.
 
 3.3.3
-Retail: Buffs should now include more talent and proc-generated effects. It's going to show a lot of extra buffs on yourself. We filtered some of these but may need to filter more in the future.
+* Retail: Buffs should now include more talent and proc-generated effects. It's going to show a lot of extra buffs on yourself. We filtered some of these but may need to filter more in the future.
 
 3.3.2
-Retail: Added back Heal Prediction and the "Show Incoming Heals" checkbox.
-Retail: The debuff icon on heal button (added in 3.3.0) now shows number of applications of the debuff.
+* Retail: Added back Heal Prediction and the "Show Incoming Heals" checkbox.
+* Retail: The debuff icon on heal button (added in 3.3.0) now shows number of applications of the debuff.
 
 3.3.1
-Retail: Added "Show Damagers" and "Show Healers" in the right-click frame menu.
-Retail: Added all supported frame names to /hlm help.
-Retail: Made slash commands ignore capitalization and surrounding whitespace.
-Retail: Fixed bare /hlm so it reliably displays help.
-Retail: Frame show commands now display a warning during combat
+* Retail: Added "Show Damagers" and "Show Healers" in the right-click frame menu.
+* Retail: Added all supported frame names to /hlm help.
+* Retail: Made slash commands ignore capitalization and surrounding whitespace.
+* Retail: Fixed bare /hlm so it reliably displays help.
+* Retail: Frame show commands now display a warning during combat
 
 3.3.0
-Retail: Debuff warnings and Buffs now use the new Aura Containers
-Retail: Buffs now update during combat and dungeons and other restricted content
-Retail: Increased max buffs from 6 to 10 
-Retail: Added an option to show the debuff icon over the matching cure button
-Retail: Debuff audio warning removed due to not being possible to support :(
-Retail: Removed the one time debuff warning message
+* Retail: Debuff warnings and Buffs now use the new Aura Containers
+* Retail: Buffs now update during combat and dungeons and other restricted content
+* Retail: Increased max buffs from 6 to 10 
+* Retail: Added an option to show the debuff icon over the matching cure button
+* Retail: Debuff audio warning removed due to not being possible to support :(
+* Retail: Removed the one time debuff warning message
 Special thanks to Daminion1313 for assisting with these changes.
 
 3.2.9
-Retail: Fixed LUA errors with their recent 12.1 update.
-Retail: Buffs and Debuff warnings no longer function during combat since Blizzard made aura APIs heavy handedly generate LUA errors during combat.
+* Retail: Fixed LUA errors with their recent 12.1 update.
+* Retail: Buffs and Debuff warnings no longer function during combat since Blizzard made aura APIs heavy handedly generate LUA errors during combat.
 
 3.2.8
 All Classics: Fixed LUA error when hiding frames
