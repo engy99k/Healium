@@ -1,3 +1,7 @@
+3.3.6
+* Retail: Improved buff filtering across all frames to reduce unrelated companion and other buff clutter.
+* Retail: Fixed buff display for Mark of the Wild, Prayer of Mending, Angelic Feather, and Echo of Light.
+
 3.3.5
 * Retail: Renewing Mist now displays correctly in the player's buff list.
 * Retail: Added Tiger's Lust to the default Monk spell list.

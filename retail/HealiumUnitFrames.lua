@@ -45,9 +45,13 @@ local SpecialPlayerBuffSpellIDs = {
 	431415, -- Sun Sear
 	54149,  -- Infusion of Light
 	465,    -- Devotion Aura
+	77489,  -- Echo of Light
 }
 local PlayerBuffAuraAliases = {
+	[1126] = { 432661 },   -- Mark of the Wild: cast spell and applied buff use different IDs
+	[33076] = { 41635 },   -- Prayer of Mending: cast spell and applied buff use different IDs
 	[115151] = { 119611 }, -- Renewing Mist: cast spell and applied HoT use different IDs
+	[121536] = { 121557 }, -- Angelic Feather: cast spell and applied speed buff use different IDs
 }
 local AuraContainersReported = false
 local AuraContainerFailureReported = false
@@ -61,13 +65,6 @@ local DispelColorMap = {
 
 local function AurasAreRestricted()
 	return C_Secrets and C_Secrets.ShouldAurasBeSecret and C_Secrets.ShouldAurasBeSecret()
-end
-
-local function IsPlayerUnit(unit)
-	if unit == "player" then return true end
-	if not unit then return false end
-	local ok, isPlayer = pcall(UnitIsUnit, unit, "player")
-	return ok and not issecretvalue(isPlayer) and isPlayer or false
 end
 
 function Healium_UsesAuraContainers()
@@ -198,12 +195,9 @@ local function CreateBuffAuraContainer(frame, unit)
 	container:SetFlowLayoutAxis(AnchorUtil.FlowLayoutAxis.Horizontal)
 	container:SetFlowLayoutAnchorPoint("RIGHT")
 	container:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Left, AnchorUtil.FlowDirection.Down)
-	local isPlayerFrame = IsPlayerUnit(unit)
 	container:AddAuraGroup(BuffAuraGroupKey, "HELPFUL|PLAYER", {
 		maxFrameCount = MaxBuffs,
-		candidateFilters = isPlayerFrame
-			and { includeSpellIDs = BuildPlayerBuffSpellFilter() }
-			or nil,
+		candidateFilters = { includeSpellIDs = BuildPlayerBuffSpellFilter() },
 		initializeFrame = InitializeBuffAuraButton,
 		layout = GetBuffAuraLayout(),
 	})
@@ -348,9 +342,7 @@ local function RefreshFrameAuraContainers(frame)
 
 	if not InCombatLockdown() and not AurasAreRestricted() then
 		frame.BuffAuraContainer:SetAuraGroupCandidateFilters(BuffAuraGroupKey,
-			IsPlayerUnit(unit)
-				and { includeSpellIDs = BuildPlayerBuffSpellFilter() }
-				or {})
+			{ includeSpellIDs = BuildPlayerBuffSpellFilter() })
 		frame.BuffAuraContainer:SetEnabled(Healium.ShowBuffs and true or false)
 
 		local profile = Healium_GetProfile()
