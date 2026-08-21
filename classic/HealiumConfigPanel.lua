@@ -507,10 +507,10 @@ function Healium_CreateConfigPanel(Class, Version)
 	ShowMinimapButtonCheck:SetScript("OnClick", ShowMinimapButtonCheck_OnClick)
 
 	PartyFrameOrderDropDown = CreateFrame("Frame", "$parentPartyFrameOrderDropDown", scrollchild, "Lib_UIDropDownMenuTemplate")
-	PartyFrameOrderDropDown:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 65, 0)
+	PartyFrameOrderDropDown:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 130, 0)
 	Lib_UIDropDownMenu_SetWidth(PartyFrameOrderDropDown, 150)
 	PartyFrameOrderDropDown.Text = PartyFrameOrderDropDown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	PartyFrameOrderDropDown.Text:SetPoint("RIGHT", PartyFrameOrderDropDown, "LEFT", 0, 2)
+	PartyFrameOrderDropDown.Text:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 0, -8)
 	PartyFrameOrderDropDown.Text:SetText("Party Frame Order")
 	PartyFrameOrderDropDown.tooltipText = "Controls ordering only in the Party frame."
 	Lib_UIDropDownMenu_Initialize(PartyFrameOrderDropDown, PartyFrameOrderDropDown_Init)
@@ -522,7 +522,7 @@ function Healium_CreateConfigPanel(Class, Version)
 		-- Dropdown menus
 		local ButtonConfigTitleText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalLarge")
 		ButtonConfigTitleText:SetJustifyH("LEFT")
-		ButtonConfigTitleText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -65, -20)
+		ButtonConfigTitleText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -130, -20)
 		ButtonConfigTitleText:SetText("Button Configuration")	
 		
 		local ButtonConfigTitleSubText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalSmall")
@@ -543,7 +543,7 @@ function Healium_CreateConfigPanel(Class, Version)
 	else
 		ClassicConfigButtonsText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalSmall")
 		ClassicConfigButtonsText:SetJustifyH("LEFT")
-		ClassicConfigButtonsText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -65, -20)
+		ClassicConfigButtonsText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -130, -20)
 		ClassicConfigButtonsText:SetText("In Classic, to configure buttons, drag and drop directly from the spellbook onto buttons.")
 		ClassicConfigButtonsText:SetTextColor(1,1,1,1) 	
 	end
