@@ -123,6 +123,7 @@ HealiumGlobal = {
 Healium.Profiles is a table of tables with this signature
 {
 	ButtonCount -- Current button count (as set by slider)
+	PartyFrameOrder -- Party frame ordering: "DEFAULT" or "TANK_HEALER_DPS"
 	SpellNames -- Table of current spell names
 	SpellIcons -- Table of current spell icons
 	SpellTypes -- One of the Healium_Type_ (new in Healium 2.0)
@@ -1172,6 +1173,7 @@ local function InitVariables()
 	-- Healium.Profiles may exist at this point, but may not be fully inited
 	local DefaultProfile = { 
 		ButtonCount = DefaultButtonCount,
+		PartyFrameOrder = "DEFAULT",
 		SpellNames = { },
 		SpellIcons = { },
 		SpellTypes = { },
@@ -1183,6 +1185,10 @@ local function InitVariables()
 	for i = 1,5 do
 		if Healium.Profiles[i] == nil then	
 			Healium.Profiles[i] = Healium_DeepCopy(DefaultProfile)
+		end
+
+		if Healium.Profiles[i].PartyFrameOrder == nil then
+			Healium.Profiles[i].PartyFrameOrder = DefaultProfile.PartyFrameOrder
 		end
 
 		-- SpellTypes was added in 2.0
@@ -1269,6 +1275,7 @@ function Healium_OnEvent(frame, event, ...)
 	end	
 		
 	if event == "PLAYER_REGEN_ENABLED" then
+		Healium_UpdatePartyFrameOrder()
 		for _,v in ipairs(Healium_FixNameplates) do
 			Healium_ShowHidePercentage(v)
 
@@ -1310,6 +1317,7 @@ function Healium_OnEvent(frame, event, ...)
 		Healium_UpdateSpells()
 		Healium_UpdateButtons()
 		Healium_Update_ConfigPanel()
+		Healium_UpdatePartyFrameOrder()
 		return
 	end
 

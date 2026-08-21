@@ -1,3 +1,6 @@
+3.3.7
+* Retail and all Classics: Added a profile-specific Party Frame Order option with Default and Tank-Healer-DPS ordering.
+
 3.3.6
 * Retail: Improved buff filtering across all frames to reduce unrelated companion and other buff clutter.
 * Retail: Fixed buff display for Mark of the Wild, Prayer of Mending, Angelic Feather, and Echo of Light.

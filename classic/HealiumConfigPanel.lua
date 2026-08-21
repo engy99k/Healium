@@ -1,4 +1,34 @@
 Healium_ConfigPanel_Category = nil
+
+local PartyFrameOrderDropDown
+local PartyFrameOrderOptions = {
+	{ text = "Default", value = "DEFAULT" },
+	{ text = "Tank-Healer-DPS", value = "TANK_HEALER_DPS" },
+}
+
+local function PartyFrameOrderDropDown_OnClick(dropdownbutton)
+	local profile = Healium_GetProfile()
+	profile.PartyFrameOrder = dropdownbutton.value
+	Lib_UIDropDownMenu_SetSelectedValue(dropdownbutton.owner, dropdownbutton.value)
+	Lib_UIDropDownMenu_SetText(dropdownbutton.owner, dropdownbutton:GetText())
+	if not Healium_UpdatePartyFrameOrder() then
+		Healium_Print("Party Frame Order will be applied when combat ends.")
+	end
+end
+
+local function PartyFrameOrderDropDown_Init(frame, level)
+	level = level or 1
+	local selected = Healium_GetProfile().PartyFrameOrder or "DEFAULT"
+	for _, option in ipairs(PartyFrameOrderOptions) do
+		local info = Lib_UIDropDownMenu_CreateInfo()
+		info.text = option.text
+		info.value = option.value
+		info.func = PartyFrameOrderDropDown_OnClick
+		info.owner = frame
+		info.checked = option.value == selected
+		Lib_UIDropDownMenu_AddButton(info, level)
+	end
+end
 local Healium_ConfigPanel_CategoryID = nil
 
 local function CreateSliderFrame(name, parent)
@@ -297,6 +327,12 @@ end
 -- Used to update the config panel controls when the profile changes
 function Healium_Update_ConfigPanel()
 	local Profile = Healium_GetProfile()
+	if PartyFrameOrderDropDown then
+		local order = Profile.PartyFrameOrder or "DEFAULT"
+		local text = order == "TANK_HEALER_DPS" and "Tank-Healer-DPS" or "Default"
+		Lib_UIDropDownMenu_SetSelectedValue(PartyFrameOrderDropDown, order)
+		Lib_UIDropDownMenu_SetText(PartyFrameOrderDropDown, text)
+	end
 	
 	HealiumMaxButtonSlider:SetValue(Healium_GetProfile().ButtonCount)
 	
@@ -469,6 +505,15 @@ function Healium_CreateConfigPanel(Class, Version)
 	-- Show minimap button check
 	local ShowMinimapButtonCheck = CreateCheck("$parentShowMinimapButtonCheckButton",scrollchild,UppercaseNamesCheck, "Shows the Minimap button", "Show Minimap button")
 	ShowMinimapButtonCheck:SetScript("OnClick", ShowMinimapButtonCheck_OnClick)
+
+	PartyFrameOrderDropDown = CreateFrame("Frame", "$parentPartyFrameOrderDropDown", scrollchild, "Lib_UIDropDownMenuTemplate")
+	PartyFrameOrderDropDown:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 65, 0)
+	Lib_UIDropDownMenu_SetWidth(PartyFrameOrderDropDown, 150)
+	PartyFrameOrderDropDown.Text = PartyFrameOrderDropDown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	PartyFrameOrderDropDown.Text:SetPoint("RIGHT", PartyFrameOrderDropDown, "LEFT", 0, 2)
+	PartyFrameOrderDropDown.Text:SetText("Party Frame Order")
+	PartyFrameOrderDropDown.tooltipText = "Controls ordering only in the Party frame."
+	Lib_UIDropDownMenu_Initialize(PartyFrameOrderDropDown, PartyFrameOrderDropDown_Init)
 	
 	
 	local ClassicConfigButtonsText
@@ -477,7 +522,7 @@ function Healium_CreateConfigPanel(Class, Version)
 		-- Dropdown menus
 		local ButtonConfigTitleText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalLarge")
 		ButtonConfigTitleText:SetJustifyH("LEFT")
-		ButtonConfigTitleText:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 0, -20)
+		ButtonConfigTitleText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -65, -20)
 		ButtonConfigTitleText:SetText("Button Configuration")	
 		
 		local ButtonConfigTitleSubText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalSmall")
@@ -498,7 +543,7 @@ function Healium_CreateConfigPanel(Class, Version)
 	else
 		ClassicConfigButtonsText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalSmall")
 		ClassicConfigButtonsText:SetJustifyH("LEFT")
-		ClassicConfigButtonsText:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 0, -30)
+		ClassicConfigButtonsText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -65, -20)
 		ClassicConfigButtonsText:SetText("In Classic, to configure buttons, drag and drop directly from the spellbook onto buttons.")
 		ClassicConfigButtonsText:SetTextColor(1,1,1,1) 	
 	end

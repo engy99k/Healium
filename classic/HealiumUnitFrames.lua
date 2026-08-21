@@ -226,8 +226,29 @@ end
 local function CreatePartyHeader(FrameName, ParentFrame)
 	local h = CreateHeader("SecureGroupHeaderTemplate", FrameName, ParentFrame)
 	h:SetAttribute("showSolo", "true")		
+	local profile = Healium_GetProfile()
+	if profile and profile.PartyFrameOrder == "TANK_HEALER_DPS" then
+		h:SetAttribute("groupingOrder", "TANK,HEALER,DAMAGER,NONE")
+		h:SetAttribute("groupBy", "ASSIGNEDROLE")
+	end
 	h:Show()
 	return h
+end
+
+function Healium_UpdatePartyFrameOrder()
+	if PartyFrame == nil or PartyFrame.hdr == nil then return true end
+	if InCombatLockdown() then return false end
+
+	local profile = Healium_GetProfile()
+	local order = profile and profile.PartyFrameOrder or "DEFAULT"
+	if order == "TANK_HEALER_DPS" then
+		PartyFrame.hdr:SetAttribute("groupingOrder", "TANK,HEALER,DAMAGER,NONE")
+		PartyFrame.hdr:SetAttribute("groupBy", "ASSIGNEDROLE")
+	else
+		PartyFrame.hdr:SetAttribute("groupBy", nil)
+		PartyFrame.hdr:SetAttribute("groupingOrder", nil)
+	end
+	return true
 end
 
 local function CreateMeHeader(FrameName, ParentFrame)
