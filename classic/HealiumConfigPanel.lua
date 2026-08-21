@@ -506,14 +506,16 @@ function Healium_CreateConfigPanel(Class, Version)
 	local ShowMinimapButtonCheck = CreateCheck("$parentShowMinimapButtonCheckButton",scrollchild,UppercaseNamesCheck, "Shows the Minimap button", "Show Minimap button")
 	ShowMinimapButtonCheck:SetScript("OnClick", ShowMinimapButtonCheck_OnClick)
 
-	PartyFrameOrderDropDown = CreateFrame("Frame", "$parentPartyFrameOrderDropDown", scrollchild, "Lib_UIDropDownMenuTemplate")
-	PartyFrameOrderDropDown:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 130, 0)
-	Lib_UIDropDownMenu_SetWidth(PartyFrameOrderDropDown, 150)
-	PartyFrameOrderDropDown.Text = PartyFrameOrderDropDown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-	PartyFrameOrderDropDown.Text:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 0, -8)
-	PartyFrameOrderDropDown.Text:SetText("Party Frame Order")
-	PartyFrameOrderDropDown.tooltipText = "Controls ordering only in the Party frame."
-	Lib_UIDropDownMenu_Initialize(PartyFrameOrderDropDown, PartyFrameOrderDropDown_Init)
+	if not Healium_IsClassic then
+		PartyFrameOrderDropDown = CreateFrame("Frame", "$parentPartyFrameOrderDropDown", scrollchild, "Lib_UIDropDownMenuTemplate")
+		PartyFrameOrderDropDown:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 130, 0)
+		Lib_UIDropDownMenu_SetWidth(PartyFrameOrderDropDown, 150)
+		PartyFrameOrderDropDown.Text = PartyFrameOrderDropDown:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+		PartyFrameOrderDropDown.Text:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 0, -8)
+		PartyFrameOrderDropDown.Text:SetText("Party Frame Order")
+		PartyFrameOrderDropDown.tooltipText = "Controls ordering only in the Party frame."
+		Lib_UIDropDownMenu_Initialize(PartyFrameOrderDropDown, PartyFrameOrderDropDown_Init)
+	end
 	
 	
 	local ClassicConfigButtonsText
@@ -522,7 +524,11 @@ function Healium_CreateConfigPanel(Class, Version)
 		-- Dropdown menus
 		local ButtonConfigTitleText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalLarge")
 		ButtonConfigTitleText:SetJustifyH("LEFT")
-		ButtonConfigTitleText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -130, -20)
+		if PartyFrameOrderDropDown then
+			ButtonConfigTitleText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -130, -20)
+		else
+			ButtonConfigTitleText:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 0, -20)
+		end
 		ButtonConfigTitleText:SetText("Button Configuration")	
 		
 		local ButtonConfigTitleSubText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalSmall")
@@ -543,7 +549,11 @@ function Healium_CreateConfigPanel(Class, Version)
 	else
 		ClassicConfigButtonsText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalSmall")
 		ClassicConfigButtonsText:SetJustifyH("LEFT")
-		ClassicConfigButtonsText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -130, -20)
+		if PartyFrameOrderDropDown then
+			ClassicConfigButtonsText:SetPoint("TOPLEFT", PartyFrameOrderDropDown, "BOTTOMLEFT", -130, -20)
+		else
+			ClassicConfigButtonsText:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 0, -30)
+		end
 		ClassicConfigButtonsText:SetText("In Classic, to configure buttons, drag and drop directly from the spellbook onto buttons.")
 		ClassicConfigButtonsText:SetTextColor(1,1,1,1) 	
 	end
