@@ -1,5 +1,5 @@
 3.3.7
-* Retail and supported Classics: Added a profile-specific Party Frame Order option with Default and Tank-Healer-DPS ordering. The option is hidden in Classic Era, which does not provide assigned party roles.
+* Retail and Mists Classic: Added a profile-specific Party Frame Order option with Default and Tank-Healer-DPS ordering.
 
 3.3.6
 * Retail: Improved buff filtering across all frames to reduce unrelated companion and other buff clutter.

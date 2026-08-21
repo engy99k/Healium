@@ -227,7 +227,7 @@ local function CreatePartyHeader(FrameName, ParentFrame)
 	local h = CreateHeader("SecureGroupHeaderTemplate", FrameName, ParentFrame)
 	h:SetAttribute("showSolo", "true")		
 	local profile = Healium_GetProfile()
-	if profile and profile.PartyFrameOrder == "TANK_HEALER_DPS" then
+	if Healium_IsClassicMists and profile and profile.PartyFrameOrder == "TANK_HEALER_DPS" then
 		h:SetAttribute("groupingOrder", "TANK,HEALER,DAMAGER,NONE")
 		h:SetAttribute("groupBy", "ASSIGNEDROLE")
 	end
@@ -241,7 +241,7 @@ function Healium_UpdatePartyFrameOrder()
 
 	local profile = Healium_GetProfile()
 	local order = profile and profile.PartyFrameOrder or "DEFAULT"
-	if order == "TANK_HEALER_DPS" then
+	if Healium_IsClassicMists and order == "TANK_HEALER_DPS" then
 		PartyFrame.hdr:SetAttribute("groupingOrder", "TANK,HEALER,DAMAGER,NONE")
 		PartyFrame.hdr:SetAttribute("groupBy", "ASSIGNEDROLE")
 	else

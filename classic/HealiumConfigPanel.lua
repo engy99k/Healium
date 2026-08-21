@@ -506,7 +506,7 @@ function Healium_CreateConfigPanel(Class, Version)
 	local ShowMinimapButtonCheck = CreateCheck("$parentShowMinimapButtonCheckButton",scrollchild,UppercaseNamesCheck, "Shows the Minimap button", "Show Minimap button")
 	ShowMinimapButtonCheck:SetScript("OnClick", ShowMinimapButtonCheck_OnClick)
 
-	if not Healium_IsClassic then
+	if Healium_IsClassicMists then
 		PartyFrameOrderDropDown = CreateFrame("Frame", "$parentPartyFrameOrderDropDown", scrollchild, "Lib_UIDropDownMenuTemplate")
 		PartyFrameOrderDropDown:SetPoint("TOPLEFT", ShowMinimapButtonCheck, "BOTTOMLEFT", 130, 0)
 		Lib_UIDropDownMenu_SetWidth(PartyFrameOrderDropDown, 150)
