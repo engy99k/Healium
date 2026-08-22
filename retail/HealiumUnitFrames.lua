@@ -44,7 +44,6 @@ local SpecialPlayerBuffSpellIDs = {
 	400735, -- Temporal Beacon
 	431415, -- Sun Sear
 	54149,  -- Infusion of Light
-	465,    -- Devotion Aura
 	77489,  -- Echo of Light
 }
 local PlayerBuffAuraAliases = {

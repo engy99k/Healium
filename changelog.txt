@@ -1,3 +1,8 @@
+3.3.8
+* Retail: Fixed alignment of the Party Frame Order setting in the configuration panel.
+* Retail: Removed Devotion Aura from special buffs to always show.
+* Retail: When changing button count, update the allowed spellids in Aura Containers immediately.
+
 3.3.7
 * Retail and Mists Classic: Added a profile-specific Party Frame Order option with Default and Tank-Healer-DPS ordering.
 
