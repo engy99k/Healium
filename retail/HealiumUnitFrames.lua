@@ -76,7 +76,42 @@ function Healium_UsesAuraContainers()
 	return AuraContainersAvailable and true or false
 end
 
+local AuraContainerRetryScheduled = false
+local AuraContainerRetryDelay = 1
+local AuraContainerRetryMaxDelay = 10
+
+-- Healium_FixNameplates is only drained when combat ends, but aura data can
+-- also be secret outside combat in 12.1.  Without this, a refresh deferred
+-- for that reason would wait for a combat that may never come, leaving the
+-- buff and dispel filters unconfigured.
+local function ScheduleAuraContainerRetry()
+	if AuraContainerRetryScheduled then return end
+	if not C_Timer or not C_Timer.After then return end
+
+	AuraContainerRetryScheduled = true
+
+	-- Back off, so a container that fails for good does not keep a one
+	-- second full refresh running forever.
+	local delay = AuraContainerRetryDelay
+	AuraContainerRetryDelay = math.min(delay * 2, AuraContainerRetryMaxDelay)
+
+	C_Timer.After(delay, function()
+		AuraContainerRetryScheduled = false
+
+		-- In combat PLAYER_REGEN_ENABLED already drains the queue.
+		if InCombatLockdown() then return end
+
+		-- Reschedules itself through QueueAuraContainerRefresh if it is
+		-- still blocked, and stops on its own once everything succeeds.
+		Healium_RefreshAuraContainers()
+	end)
+end
+
 local function QueueAuraContainerRefresh(frame)
+	-- Before the pending check: a frame whose latch is already set still
+	-- needs the retry to keep running.
+	ScheduleAuraContainerRetry()
+
 	if frame.AuraContainerRefreshPending then return end
 	frame.AuraContainerRefreshPending = true
 	table.insert(Healium_FixNameplates, frame)
@@ -154,6 +189,27 @@ local function BuildPlayerBuffSpellFilter()
 	return includeSpellIDs
 end
 
+-- The buff filter and the cure type filters are identical for every unit
+-- frame, so they are built once per configuration change instead of once per
+-- frame (which cost ~600 API calls per refresh in a 40 man raid).
+local CachedBuffSpellFilter = nil
+local CachedCureTypes = nil
+local CachedAllCureTypes = nil
+
+local function InvalidateAuraFilterCache()
+	CachedBuffSpellFilter = nil
+	CachedCureTypes = nil
+	CachedAllCureTypes = nil
+end
+
+local function GetPlayerBuffSpellFilter()
+	if not CachedBuffSpellFilter then
+		CachedBuffSpellFilter = BuildPlayerBuffSpellFilter()
+	end
+
+	return CachedBuffSpellFilter
+end
+
 local function InitializeBuffAuraButton(auraButton)
 	auraButton:SetSize(24, 24)
 	local icon = auraButton:CreateTexture(nil, "ARTWORK")
@@ -196,7 +252,7 @@ local function CreateBuffAuraContainer(frame, unit)
 	container:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Left, AnchorUtil.FlowDirection.Down)
 	container:AddAuraGroup(BuffAuraGroupKey, "HELPFUL|PLAYER", {
 		maxFrameCount = MaxBuffs,
-		candidateFilters = { includeSpellIDs = BuildPlayerBuffSpellFilter() },
+		candidateFilters = { includeSpellIDs = GetPlayerBuffSpellFilter() },
 		initializeFrame = InitializeBuffAuraButton,
 		layout = GetBuffAuraLayout(),
 	})
@@ -255,6 +311,23 @@ end
 
 local GetConfiguredCureTypes
 
+-- Cure types per button plus their union, cached alongside the buff filter.
+local function GetCureTypeFilters()
+	if not CachedCureTypes then
+		local profile = Healium_GetProfile()
+
+		CachedCureTypes = {}
+		CachedAllCureTypes = {}
+
+		for i = 1, Healium_MaxButtons do
+			CachedCureTypes[i] = GetConfiguredCureTypes(profile, i)
+			for dispelType in pairs(CachedCureTypes[i]) do CachedAllCureTypes[dispelType] = true end
+		end
+	end
+
+	return CachedCureTypes, CachedAllCureTypes
+end
+
 local function CreateDebuffAuraContainer(frame, unit)
 	local ok, container = pcall(CreateFrame, "AuraContainer", nil, frame, "CustomAuraContainerTemplate")
 	if not ok or not container then return false end
@@ -265,13 +338,7 @@ local function CreateDebuffAuraContainer(frame, unit)
 	container:SetUnit(unit)
 	frame.DebuffButtonBorderTextures = {}
 	frame.DebuffButtonIconHolders = {}
-	local profile = Healium_GetProfile()
-	local configuredTypes = {}
-	local allCureTypes = {}
-	for i = 1, Healium_MaxButtons do
-		configuredTypes[i] = GetConfiguredCureTypes(profile, i)
-		for dispelType in pairs(configuredTypes[i]) do allCureTypes[dispelType] = true end
-	end
+	local configuredTypes, allCureTypes = GetCureTypeFilters()
 
 	local healthSlot = container:AddAuraSlot(HealthDebuffSlotKey, "HARMFUL|RAID_PLAYER_DISPELLABLE", {
 		candidateFilters = { includeDispelTypes = Healium.EnableDebufs and allCureTypes or {} },
@@ -341,16 +408,14 @@ local function RefreshFrameAuraContainers(frame)
 
 	if not InCombatLockdown() and not AurasAreRestricted() then
 		frame.BuffAuraContainer:SetAuraGroupCandidateFilters(BuffAuraGroupKey,
-			{ includeSpellIDs = BuildPlayerBuffSpellFilter() })
+			{ includeSpellIDs = GetPlayerBuffSpellFilter() })
 		frame.BuffAuraContainer:SetEnabled(Healium.ShowBuffs and true or false)
 
-		local profile = Healium_GetProfile()
-		local allCureTypes = {}
+		local configuredTypes, allCureTypes = GetCureTypeFilters()
+
 		for i = 1, Healium_MaxButtons do
-			local cureTypes = GetConfiguredCureTypes(profile, i)
-			for dispelType in pairs(cureTypes) do allCureTypes[dispelType] = true end
 			frame.DebuffAuraContainer:SetAuraSlotCandidateFilters("HealiumCureDebuff" .. i,
-				{ includeDispelTypes = Healium.EnableDebufs and cureTypes or {} })
+				{ includeDispelTypes = Healium.EnableDebufs and configuredTypes[i] or {} })
 			SetVisualsAlpha(frame.DebuffButtonBorderTextures[i],
 				Healium.EnableDebufs and Healium.EnableDebufButtonHighlighting and 1 or 0)
 			if frame.DebuffButtonIconHolders[i] then
@@ -373,10 +438,23 @@ end
 
 function Healium_RefreshAuraContainers()
 	if not Healium_UsesAuraContainers() then return end
+	InvalidateAuraFilterCache()
 	local initialized = false
 	for _, frame in ipairs(Healium_Frames) do
+		-- Clear the latch first.  PLAYER_REGEN_ENABLED empties
+		-- Healium_FixNameplates wholesale without touching these flags, so a
+		-- frame can end up flagged but no longer queued, and
+		-- QueueAuraContainerRefresh would then refuse to queue it ever again.
+		frame.AuraContainerRefreshPending = nil
 		RefreshFrameAuraContainers(frame)
 		if frame.BuffAuraContainer and frame.DebuffAuraContainer then initialized = true end
+	end
+
+	-- A failing frame would have asked for another attempt while looping, so
+	-- if none did, everything succeeded and the next problem starts from the
+	-- short delay again.
+	if not AuraContainerRetryScheduled then
+		AuraContainerRetryDelay = 1
 	end
 	if initialized and not AuraContainersReported then
 		Healium_Print("Retail aura displays initialized.")
@@ -396,8 +474,8 @@ function Healium_CreateButtonsForNameplate(frame)
 	local Profile = Healium_GetProfile()
 	
 	for i=1, Healium_MaxButtons, 1 do
-		name = frame:GetName()
-		button = CreateButton(name.."_Heal"..i, frame, x)
+		local name = frame:GetName()
+		local button = CreateButton(name.."_Heal"..i, frame, x)
 		x = x + xSpacing + NamePlateHeight
 
 		button.index = i -- .index is used by drag operation
@@ -809,7 +887,8 @@ function Healium_UpdateOpaqueHealthbarBackgrounds()
 end
 
 function HealiumUnitFrames_Button_OnShow(frame)
-	table.insert(Healium_ShownFrames, frame)
+	-- Keyed by frame so OnHide can actually remove it again.
+	Healium_ShownFrames[frame] = true
 end	
 
 function HealiumUnitFrames_Button_OnHide(frame)

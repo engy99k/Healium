@@ -162,6 +162,7 @@ end
 function Healium_SetButtonCount(count)
 	HealiumMaxButtonSlider.Text:SetText("Show |cFFFFFFFF"..count.. "|r Buttons")
 	Healium_GetProfile().ButtonCount = count
+	if Healium_InvalidateArmedBuffNames then Healium_InvalidateArmedBuffNames() end
 	Healium_UpdateButtonVisibility()
 end
 
@@ -361,8 +362,6 @@ function Healium_CreateConfigPanel(Class, Version)
 	local panel = CreateFrame("Frame", nil, UIParent)
 	Healium_ConfigPanel = panel
 	panel.name = Healium_AddonName
-	panel.okay = function (frame)frame.originalValue = MY_VARIABLE end    -- [[ When the player clicks okay, set the original value to the current setting ]] --
-	panel.cancel = function (frame) MY_VARIABLE = frame.originalValue end    -- [[ When the player clicks cancel, set the current setting to the original value ]] --
 	
 	local layout
 	Healium_ConfigPanel_Category, layout = Settings.RegisterCanvasLayoutCategory(panel, panel.name);
@@ -416,12 +415,18 @@ function Healium_CreateConfigPanel(Class, Version)
 	HealiumClassIconTexture = HealiumClassIcon:CreateTexture(nil, "BACKGROUND")
 	HealiumClassIconTexture:SetAllPoints()
 	HealiumClassIconTexture:SetTexture("Interface/Glues/CHARACTERCREATE/UI-CHARACTERCREATE-CLASSES")
-	local coords = CLASS_ICON_TCOORDS[Class];
-	HealiumClassIconTexture:SetTexCoord(coords[1], coords[2], coords[3], coords[4]);	
+	-- Decorative only, but this runs before the slash commands, the menu and
+	-- the unit frames are created: an error here would take all of them with it.
+	local coords = Class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[Class];
+	if coords then
+		HealiumClassIconTexture:SetTexCoord(coords[1], coords[2], coords[3], coords[4]);
+	else
+		HealiumClassIconTexture:Hide();
+	end
 	HealiumClassIcon:SetHeight(60)
 	HealiumClassIcon:SetWidth(60)
 	HealiumClassIcon.Text = HealiumClassIcon:CreateFontString(nil, "OVERLAY","GameFontNormalLarge")
-	HealiumClassIcon.Text:SetText(strupper(Class))
+	HealiumClassIcon.Text:SetText(Class and strupper(Class) or "")
 	HealiumClassIcon.Text:SetPoint("CENTER",0,-38)
 	HealiumClassIcon.Text:SetTextColor(1,1,0.2,1)
 

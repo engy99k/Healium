@@ -109,6 +109,18 @@ local function RefreshProfilesPanel()
 	ProfilesPanelDeleteButton:SetEnabled(hasSelection)
 end
 
+-- Blizzard has shipped these dialog members under more than one name.  Take
+-- whichever exists instead of betting on one and failing silently.
+local function GetPopupEditBox(dialog)
+	return dialog and (dialog.editBox or dialog.EditBox)
+end
+
+local function GetPopupAcceptButton(dialog)
+	if not dialog then return nil end
+	if dialog.Buttons then return dialog.Buttons[1] end
+	return dialog.button1
+end
+
 StaticPopupDialogs["HEALIUM_PROFILE_NAME"] = {
 	text = "%s",
 	button1 = ACCEPT,
@@ -118,17 +130,21 @@ StaticPopupDialogs["HEALIUM_PROFILE_NAME"] = {
 	hideOnEscape = true,
 	preferredIndex = 3,
 	OnShow = function(self, data)
-		self.EditBox:SetMaxLetters(40)
-		self.EditBox:SetText(data.initialName or "")
-		self.EditBox:HighlightText()
-		self.EditBox:SetFocus()
+		local editBox = GetPopupEditBox(self)
+		if not editBox then return end
+		editBox:SetMaxLetters(40)
+		editBox:SetText(data and data.initialName or "")
+		editBox:HighlightText()
+		editBox:SetFocus()
 	end,
 	OnAccept = function(self, data)
-		data.callback(self.EditBox:GetText())
+		local editBox = GetPopupEditBox(self)
+		if not editBox or not data or not data.callback then return end
+		data.callback(editBox:GetText())
 	end,
 	EditBoxOnEnterPressed = function(editBox)
-		local dialog = editBox:GetParent()
-		dialog.Buttons[1]:Click()
+		local button = GetPopupAcceptButton(editBox:GetParent())
+		if button then button:Click() end
 	end,
 	EditBoxOnEscapePressed = function(editBox)
 		editBox:GetParent():Hide()
@@ -220,6 +236,24 @@ local function LoadProfile()
 		end
 		local specialization = GetSpecialization() or 1
 		Healium.Profiles[specialization] = CopyProfile(savedProfile)
+
+		-- Macros are per character: a name saved on another character may not
+		-- exist here, and the button would silently do nothing.
+		local missingMacros
+
+		for i = 1, Healium.Profiles[specialization].ButtonCount or 0 do
+			if Healium.Profiles[specialization].SpellTypes[i] == Healium_Type_Macro then
+				local macroName = Healium.Profiles[specialization].SpellNames[i]
+				if macroName and (GetMacroIndexByName(macroName) or 0) == 0 then
+					missingMacros = missingMacros and (missingMacros .. ", " .. macroName) or macroName
+				end
+			end
+		end
+
+		if missingMacros then
+			Healium_Warn("This character has no macro named: " .. missingMacros)
+		end
+
 		Healium_Update_ConfigPanel()
 		Healium_UpdateButtonIcons()
 		Healium_UpdateButtonAttributes()
@@ -283,11 +317,17 @@ local function CreateProfilesPanel(parentCategory)
 	local classIconTexture = classIcon:CreateTexture(nil, "BACKGROUND")
 	classIconTexture:SetAllPoints()
 	classIconTexture:SetTexture("Interface/Glues/CHARACTERCREATE/UI-CHARACTERCREATE-CLASSES")
-	local coords = CLASS_ICON_TCOORDS[class]
-	classIconTexture:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+	-- Purely decorative, but an unguarded index here used to abort the whole
+	-- panel, and with it the rest of ADDON_LOADED.
+	local coords = class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[class]
+	if coords then
+		classIconTexture:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+	else
+		classIconTexture:Hide()
+	end
 	local classIconText = classIcon:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
 	classIconText:SetPoint("CENTER", 0, -38)
-	classIconText:SetText(strupper(class))
+	classIconText:SetText(class and strupper(class) or "")
 	classIconText:SetTextColor(1, 1, 0.2, 1)
 
 	local description = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -933,15 +973,19 @@ function Healium_CreateConfigPanel(Class, Version)
 	local panel = CreateFrame("Frame", nil, UIParent)
 	Healium_ConfigPanel = panel
 	panel.name = Healium_AddonName
-	panel.okay = function (frame)frame.originalValue = MY_VARIABLE end    -- [[ When the player clicks okay, set the original value to the current setting ]] --
-	panel.cancel = function (frame) MY_VARIABLE = frame.originalValue end    -- [[ When the player clicks cancel, set the current setting to the original value ]] --
 	
 	local layout
 	Healium_ConfigPanel_Category, layout = Settings.RegisterCanvasLayoutCategory(panel, panel.name);
 	--Healium_ConfigPanel_CategoryID = Healium_ConfigPanel_Category:GetID()
 	Settings.RegisterAddOnCategory(Healium_ConfigPanel_Category);
-	CreateProfilesPanel(Healium_ConfigPanel_Category)
-	CreateFrameLayoutsPanel(Healium_ConfigPanel_Category)
+	-- Optional UI.  Unguarded, an error in either one aborts the rest of
+	-- ADDON_LOADED and leaves Healium with no slash commands, no menu and no
+	-- unit frames at all.  Fail loudly, but keep going.
+	local panelOK, panelErr = pcall(CreateProfilesPanel, Healium_ConfigPanel_Category)
+	if not panelOK then Healium_Warn("Button Profiles panel failed to load: " .. tostring(panelErr)) end
+
+	panelOK, panelErr = pcall(CreateFrameLayoutsPanel, Healium_ConfigPanel_Category)
+	if not panelOK then Healium_Warn("Frame Layouts panel failed to load: " .. tostring(panelErr)) end
 
 
 	local scrollframe = CreateFrame("ScrollFrame", "HealiumPanelScrollFrame", panel, "UIPanelScrollFrameTemplate") 
@@ -986,12 +1030,18 @@ function Healium_CreateConfigPanel(Class, Version)
 	HealiumClassIconTexture = HealiumClassIcon:CreateTexture(nil, "BACKGROUND")
 	HealiumClassIconTexture:SetAllPoints()
 	HealiumClassIconTexture:SetTexture("Interface/Glues/CHARACTERCREATE/UI-CHARACTERCREATE-CLASSES")
-	local coords = CLASS_ICON_TCOORDS[Class];
-	HealiumClassIconTexture:SetTexCoord(coords[1], coords[2], coords[3], coords[4]);	
+	-- Decorative only, but this runs before the slash commands, the menu and
+	-- the unit frames are created: an error here would take all of them with it.
+	local coords = Class and CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[Class];
+	if coords then
+		HealiumClassIconTexture:SetTexCoord(coords[1], coords[2], coords[3], coords[4]);
+	else
+		HealiumClassIconTexture:Hide();
+	end
 	HealiumClassIcon:SetHeight(60)
 	HealiumClassIcon:SetWidth(60)
 	HealiumClassIcon.Text = HealiumClassIcon:CreateFontString(nil, "OVERLAY","GameFontNormalLarge")
-	HealiumClassIcon.Text:SetText(strupper(Class))
+	HealiumClassIcon.Text:SetText(Class and strupper(Class) or "")
 	HealiumClassIcon.Text:SetPoint("CENTER",0,-38)
 	HealiumClassIcon.Text:SetTextColor(1,1,0.2,1)
 
