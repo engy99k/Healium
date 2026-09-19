@@ -1,4 +1,4 @@
-3.6.0
+3.6.0 Beta
 * Forever: Added initial support for World of Warcraft: Forever.
 
 3.5.0
