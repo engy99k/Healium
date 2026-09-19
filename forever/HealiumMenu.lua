@@ -365,19 +365,17 @@ local function HealiumMenu_InitializeDropDown(frame,level)
 	}
 
 	local currentSpell = Profile.SpellNames[index]
-	local currentRank = Profile.SpellRanks[index]
 	
-	for k, v in ipairs (Healium_Spell.Name) do
-		local spellmenuItem = { }
-		spellmenuItem.text = Healium_Spell.DisplayName[k] or Healium_Spell.Name[k]
-		spellmenuItem.func = SetCurrentSpell
-		spellmenuItem.icon = Healium_Spell.Icon[k]
-		spellmenuItem.checked = currentSpell == Healium_Spell.Name[k] and (currentRank or false) == Healium_Spell.Rank[k]
-		spellmenuItem.arg1 = index
-		spellmenuItem.arg2 = k
-		
-		if (spellmenuItem.icon) then
-			table.insert(spells, spellmenuItem)
+	for spellIndex, spellName in ipairs(Healium_Spell.Name) do
+		if not Healium_Spell.Rank[spellIndex] and Healium_Spell.Icon[spellIndex] then
+			table.insert(spells, {
+				text = spellName,
+				func = SetCurrentSpell,
+				icon = Healium_Spell.Icon[spellIndex],
+				checked = currentSpell == spellName,
+				arg1 = index,
+				arg2 = spellIndex,
+			})
 		end
 	end
 

@@ -1,3 +1,8 @@
+3.6.1 Beta
+* Forever: Added class-appropriate healing, cure, utility, and buff spell lists.
+* Forever: Simplified spell-assignment menus.
+* Forever: Menu selections now track the highest learned rank; drag-and-drop can assign a specific lower rank.
+
 3.6.0 Beta
 * Forever: Added initial support for World of Warcraft: Forever.
 

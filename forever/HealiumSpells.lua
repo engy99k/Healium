@@ -29,7 +29,9 @@ local function Count(tab)
 	return cnt
 end
 
--- These spellIDs are from wowhead
+-- Forever spell families are based on the class spellbooks published for the
+-- 1.60.1 client.  Only one base spell ID is needed for each family; Healium
+-- discovers every learned rank from the player's spellbook at runtime.
 function Healium_InitSpells(class, race)
 	Healium_DebugPrint("Healium_InitSpells class = " .. class .. " race = " .. race)
 	local CureName
@@ -47,23 +49,18 @@ function Healium_InitSpells(class, race)
 
 	-- Init spell list
 	if (class == "DRUID") then 
-		AddSpell(774)		-- Rejuvenation
-		AddSpell(8936)		-- Regrowth
-		AddSpell(33763)		-- Lifebloom
-		AddSpell(5185)		-- Healing Touch
-		AddSpell(18562)		-- Swiftmend
-		AddSpell(48438)		-- Wild Growth
-		AddSpell(88423)		-- Nature's Cure
-		AddSpell(102342)	-- Ironbark
-		AddSpell(102351)	-- Cenarion Ward
-		AddSpell(2782)		-- Remove Corruption
-		AddSpell(2893)		-- Abolish Poison
-		AddSpell(8946)		-- Cure Poison
-		AddSpell(20484)		-- Rebirth (battle rez)
-		AddSpell(50769)		-- Revive (rez)
-		AddSpell(50464)     -- Nourish
-		AddSpell(203651)    -- Overgrowth
-		AddSpell(29166)     -- Innervate	
+		AddSpell(5185)       -- Healing Touch
+		AddSpell(1126)       -- Mark of the Wild
+		AddSpell(774)        -- Rejuvenation
+		AddSpell(8936)       -- Regrowth
+		AddSpell(8946)       -- Cure Poison
+		AddSpell(20484)      -- Rebirth
+		AddSpell(2782)       -- Remove Curse
+		AddSpell(2893)       -- Abolish Poison
+		AddSpell(29166)      -- Innervate
+		AddSpell(21849)      -- Gift of the Wild
+		AddSpell(50769)      -- Revive
+		AddSpell(48438)      -- Wild Growth
 
 		-- Druid Remove Curse
 		CureName = Healium_GetSpellName(2782) 
@@ -91,29 +88,24 @@ function Healium_InitSpells(class, race)
 	end
 
 	if (class == "PRIEST") then 
-		AddSpell(527)		-- Purify		
-		AddSpell(528)		-- Cure Disease
-		AddSpell(552)		-- Abolish Disease
-		AddSpell(213634)	-- Purify Disease (shadow spec)
-		AddSpell(139)		-- Renew
-		AddSpell(2061)		-- Flash Heal
-		AddSpell(2060)		-- Heal
-		AddSpell(32546)		-- Binding Heal
-		AddSpell(596)		-- Prayer of Healing
-		AddSpell(33076)		-- Prayer of Mending
-		AddSpell(200829)	-- Plea
-		AddSpell(186263)	-- Shadow Mend
-		AddSpell(34861)		-- Circle of Healing
-		AddSpell(17)		-- Power Word: Shield
-		AddSpell(152118)	-- Clarity of Will
-		AddSpell(47788)		-- Guardian Spirit
-		AddSpell(47540)		-- Penance
-		AddSpell(2050)     	-- Holy Word: Serenity		
-		AddSpell(121135)	-- Cascade (not sure if correct Cascade)
-		AddSpell(2006)		-- Resurrection (rez)
-		AddSpell(194509)    -- Power Word: Radiance
-		AddSpell(33206)     -- Pain Suppression
-		AddSpell(47536)     -- Rapture		
+		AddSpell(2050)       -- Lesser Heal
+		AddSpell(139)        -- Renew
+		AddSpell(2006)       -- Resurrection
+		AddSpell(528)        -- Cure Disease
+		AddSpell(2054)       -- Heal
+		AddSpell(2061)       -- Flash Heal
+		AddSpell(596)        -- Prayer of Healing
+		AddSpell(552)        -- Abolish Disease
+		AddSpell(2060)       -- Greater Heal
+		AddSpell(32546)      -- Binding Heal
+		AddSpell(33076)      -- Prayer of Mending
+		AddSpell(527)        -- Dispel Magic
+		AddSpell(1243)       -- Power Word: Fortitude
+		AddSpell(17)         -- Power Word: Shield
+		AddSpell(14752)      -- Divine Spirit
+		AddSpell(21562)      -- Prayer of Fortitude
+		AddSpell(27681)      -- Prayer of Spirit
+		AddSpell(47540)      -- Penance
 
 		-- Priest Dispel Magic
 		CureName = Healium_GetSpellName(527)
@@ -141,18 +133,13 @@ function Healium_InitSpells(class, race)
 	end
 
 	if (class == "SHAMAN") then
-		AddSpell(526)		-- Cure Poison
-		AddSpell(2870)		-- Cure Disease
-		AddSpell(51886)		-- Cleanse Spirit	
-		AddSpell(77130)		-- Purify Spirit
-		AddSpell(8004)		-- Healing Surge
-		AddSpell(77472)     -- Healing Wave		
-		AddSpell(1064)		-- Chain Heal		
-		AddSpell(61295)		-- Riptide		
-		AddSpell(974)		-- Earth Shield
-		AddSpell(16188)		-- Nature's Swiftness
-		AddSpell(73685)		-- Unleash Life
-		AddSpell(2008)		-- Ancestral Spirit (rez)
+		AddSpell(331)        -- Healing Wave
+		AddSpell(2008)       -- Ancestral Spirit
+		AddSpell(526)        -- Cure Poison
+		AddSpell(8004)       -- Lesser Healing Wave
+		AddSpell(2870)       -- Cure Disease
+		AddSpell(1064)       -- Chain Heal
+		AddSpell(61295)      -- Riptide
 		
 		-- Shaman Cure Poison
 		CureName = Healium_GetSpellName(526)
@@ -172,32 +159,27 @@ function Healium_InitSpells(class, race)
 	end
 
 	if (class == "PALADIN") then
-		AddSpell(19740) -- Blessing of Might
-		AddSpell(19750) -- Flash of Light
-		AddSpell(20473) -- Holy Shock
-		AddSpell(633) 	-- Lay on Hands
-		AddSpell(1152) 	-- Purify
-		AddSpell(4987) 	-- Cleanse
-		AddSpell(213644) -- Cleanse Toxins
-		AddSpell(1022)	-- Hand of Protection
-		AddSpell(1038)	-- Hand of Salvation
-		AddSpell(1044)	-- Hand of Freedom
-		AddSpell(6940) -- Blessing of Sacrifice		
-		AddSpell(53563)	-- Beacon of Light
-		AddSpell(200025) -- Beacon of Virtue
-		AddSpell(20925)	-- Sacred Shield
-		AddSpell(85673)	-- Word of Glory
-		AddSpell(635) -- Holy Light (Forever)
-		AddSpell(85222)	-- Light of Dawn
-		AddSpell(82327)	-- Holy Radiance
-		AddSpell(114163) -- Eternal Flame
-		AddSpell(114039) -- Hand of Purity
-		AddSpell(114165) -- Holy Prism
-		AddSpell(114916) -- Execution Sentence
-		AddSpell(7328) -- Redemption (rez)
-		AddSpell(183998) -- Light of the Martyr
-		AddSpell(391054) -- Intercession
-		AddSpell(204018) -- blessing of spellwarding
+		AddSpell(19740)      -- Blessing of Might
+		AddSpell(635)        -- Holy Light
+		AddSpell(1152)       -- Purify
+		AddSpell(633)        -- Lay on Hands
+		AddSpell(7328)       -- Redemption
+		AddSpell(19742)      -- Blessing of Wisdom
+		AddSpell(19750)      -- Flash of Light
+		AddSpell(19977)      -- Blessing of Light
+		AddSpell(4987)       -- Cleanse
+		AddSpell(20473)      -- Holy Shock
+		AddSpell(1022)       -- Blessing of Protection
+		AddSpell(1044)       -- Blessing of Freedom
+		AddSpell(1038)       -- Blessing of Salvation
+		AddSpell(19752)      -- Divine Intervention
+		AddSpell(6940)       -- Blessing of Sacrifice
+		AddSpell(20217)      -- Blessing of Kings
+		AddSpell(25782)      -- Greater Blessing of Might
+		AddSpell(25894)      -- Greater Blessing of Wisdom
+		AddSpell(25890)      -- Greater Blessing of Light
+		AddSpell(25895)      -- Greater Blessing of Salvation
+		AddSpell(25898)      -- Greater Blessing of Kings
 		
 		-- Paladin Purify
 		CureName = Healium_GetSpellName(1152)

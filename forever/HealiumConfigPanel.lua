@@ -712,20 +712,21 @@ local function DropDownMenu_Init(frame,level)
 		end
 	end
 	local selectedName = buttonIndex and Profile.SpellNames[buttonIndex]
-	local selectedRank = buttonIndex and Profile.SpellRanks[buttonIndex]
 	
 	for k, v in ipairs (Healium_Spell.Name) do
-		info.text = Healium_Spell.DisplayName[k] or Healium_Spell.Name[k]
-		info.value = k-1
-		info.func = DropDownMenuItem_OnClick
-		info.owner = DropDown
 		local rank = Healium_Spell.Rank[k]
-		info.checked = selectedName == Healium_Spell.Name[k] and (selectedRank or false) == rank
-		info.icon = Healium_Spell.Icon[k]
-		if (info.icon) then
-			Lib_UIDropDownMenu_AddButton(info, level) 
-			if info.checked then
-				Lib_UIDropDownMenu_SetSelectedValue(DropDown , k-1)	
+		if not rank then
+			info.text = Healium_Spell.Name[k]
+			info.value = k-1
+			info.func = DropDownMenuItem_OnClick
+			info.owner = DropDown
+			info.checked = selectedName == Healium_Spell.Name[k]
+			info.icon = Healium_Spell.Icon[k]
+			if (info.icon) then
+				Lib_UIDropDownMenu_AddButton(info, level)
+				if info.checked then
+					Lib_UIDropDownMenu_SetSelectedValue(DropDown , k-1)
+				end
 			end
 		end
 	end
@@ -1101,7 +1102,7 @@ function Healium_CreateConfigPanel(Class, Version)
 	local ButtonConfigTitleSubText = scrollchild:CreateFontString(nil, "OVERLAY","GameFontNormalSmall")
 	ButtonConfigTitleSubText:SetJustifyH("LEFT")
 	ButtonConfigTitleSubText:SetPoint("TOPLEFT", ButtonConfigTitleText, "BOTTOMLEFT", 0, 0)
-	ButtonConfigTitleSubText:SetText("Click the dropdowns to configure each button.|nYou may now drag and drop directly from the spellbook|nonto buttons to configure them, including buffs!")
+	ButtonConfigTitleSubText:SetText("Dropdown selections use the highest learned rank.|nTo assign a lower rank, drag it from your spellbook onto a Healium button.|nIf lower ranks are hidden, type |cFFFFFFFF/console ShowAllSpellRanks 1|r|nand then reopen your spellbook. Buffs can be dragged too!")
 	ButtonConfigTitleSubText:SetTextColor(1,1,1,1) 	
 
 	local y_inc = 20

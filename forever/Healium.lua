@@ -685,6 +685,7 @@ local function GetSpellSlotID(spell, subtext)
 
 	Healium_DebugPrint("GetSpellSlotID: ", spell);	
 	local count = GetSpellCount()
+	local highestRankSlot
 	
 	for i = 1, count do
         local spellName, spellSubName 
@@ -708,7 +709,10 @@ local function GetSpellSlotID(spell, subtext)
 			Healium_DebugPrint("spell: ", spellName, "subtext:", spellSubName);
 			
 			if not subtext then
-				return i
+				-- Ranked spells are ordered from lowest to highest in the
+				-- spellbook. Keep scanning so an unranked selection resolves
+				-- to the highest learned rank rather than the first rank.
+				highestRankSlot = i
 			end
 			
 			if spellSubName == subtext then
@@ -719,9 +723,9 @@ local function GetSpellSlotID(spell, subtext)
         if (i > 300) then
             break
         end
-    end
+	end
 	
-    return nil
+	return highestRankSlot
 end
 
 local function AddDiscoveredSpell(name, rank, slotID, icon, displayName)
