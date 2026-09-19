@@ -1,0 +1,21 @@
+## Interface: 16001
+## Title: Healium
+## Notes: A healing user-interface addon that provides up to 15 customizable buttons next to each party or raid members name. Based on FB Healbox.
+## SavedVariables: HealiumGlobal
+## SavedVariablesPerCharacter: Healium
+## Globe: check-classic
+## IconTexture: Interface/Icons/Spell_Holy_LayOnHands
+## Dependencies: Blizzard_AuraContainer
+HealiumVersion.lua
+forever/Healium.lua
+forever/UIDropDownMenuTemplates.xml
+forever/UIDropDownMenu.lua
+forever/HealiumHealButton.lua
+forever/HealiumSpells.lua
+forever/HealiumSlashCommands.lua
+forever/HealiumConfigPanel.lua
+forever/HealiumMinimapButton.lua
+forever/HealiumMenu.lua
+forever/Healium.xml
+forever/HealiumUnitFrames.xml
+forever/HealiumUnitFrames.lua

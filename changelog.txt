@@ -1,3 +1,6 @@
+3.6.0
+* Forever: Added initial support for World of Warcraft: Forever.
+
 3.5.0
 * Retail: Added a Frame Layouts subcategory to Healium’s options, allowing you to save and recall frame positions, visibility, and scale on any character.
 * Retail: Renamed Profiles subcategory to Button Profiles to more clearly indicate what it does.
