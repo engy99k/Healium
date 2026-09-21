@@ -49,18 +49,25 @@ function Healium_InitSpells(class, race)
 
 	-- Init spell list
 	if (class == "DRUID") then 
+		-- Heals
 		AddSpell(5185)       -- Healing Touch
-		AddSpell(1126)       -- Mark of the Wild
 		AddSpell(774)        -- Rejuvenation
 		AddSpell(8936)       -- Regrowth
+		AddSpell(48438)      -- Wild Growth
+
+		-- Cures
 		AddSpell(8946)       -- Cure Poison
-		AddSpell(20484)      -- Rebirth
 		AddSpell(2782)       -- Remove Curse
 		AddSpell(2893)       -- Abolish Poison
+
+		-- Buffs
+		AddSpell(1126)       -- Mark of the Wild
 		AddSpell(29166)      -- Innervate
 		AddSpell(21849)      -- Gift of the Wild
+
+		-- Other
+		AddSpell(20484)      -- Rebirth
 		AddSpell(50769)      -- Revive
-		AddSpell(48438)      -- Wild Growth
 
 		-- Druid Remove Curse
 		CureName = Healium_GetSpellName(2782) 
@@ -88,24 +95,31 @@ function Healium_InitSpells(class, race)
 	end
 
 	if (class == "PRIEST") then 
+		-- Heals
 		AddSpell(2050)       -- Lesser Heal
 		AddSpell(139)        -- Renew
-		AddSpell(2006)       -- Resurrection
-		AddSpell(528)        -- Cure Disease
 		AddSpell(2054)       -- Heal
 		AddSpell(2061)       -- Flash Heal
 		AddSpell(596)        -- Prayer of Healing
-		AddSpell(552)        -- Abolish Disease
 		AddSpell(2060)       -- Greater Heal
 		AddSpell(32546)      -- Binding Heal
 		AddSpell(33076)      -- Prayer of Mending
+		AddSpell(47540)      -- Penance
+
+		-- Cures
+		AddSpell(528)        -- Cure Disease
+		AddSpell(552)        -- Abolish Disease
 		AddSpell(527)        -- Dispel Magic
+
+		-- Buffs
 		AddSpell(1243)       -- Power Word: Fortitude
 		AddSpell(17)         -- Power Word: Shield
 		AddSpell(14752)      -- Divine Spirit
 		AddSpell(21562)      -- Prayer of Fortitude
 		AddSpell(27681)      -- Prayer of Spirit
-		AddSpell(47540)      -- Penance
+
+		-- Other
+		AddSpell(2006)       -- Resurrection
 
 		-- Priest Dispel Magic
 		CureName = Healium_GetSpellName(527)
@@ -133,13 +147,20 @@ function Healium_InitSpells(class, race)
 	end
 
 	if (class == "SHAMAN") then
+		-- Heals
 		AddSpell(331)        -- Healing Wave
-		AddSpell(2008)       -- Ancestral Spirit
-		AddSpell(526)        -- Cure Poison
 		AddSpell(8004)       -- Lesser Healing Wave
-		AddSpell(2870)       -- Cure Disease
 		AddSpell(1064)       -- Chain Heal
 		AddSpell(61295)      -- Riptide
+
+		-- Cures
+		AddSpell(526)        -- Cure Poison
+		AddSpell(2870)       -- Cure Disease
+
+		-- Buffs
+
+		-- Other
+		AddSpell(2008)       -- Ancestral Spirit
 		
 		-- Shaman Cure Poison
 		CureName = Healium_GetSpellName(526)
@@ -159,16 +180,20 @@ function Healium_InitSpells(class, race)
 	end
 
 	if (class == "PALADIN") then
-		AddSpell(19740)      -- Blessing of Might
+		-- Heals
 		AddSpell(635)        -- Holy Light
-		AddSpell(1152)       -- Purify
 		AddSpell(633)        -- Lay on Hands
-		AddSpell(7328)       -- Redemption
-		AddSpell(19742)      -- Blessing of Wisdom
 		AddSpell(19750)      -- Flash of Light
-		AddSpell(19977)      -- Blessing of Light
-		AddSpell(4987)       -- Cleanse
 		AddSpell(20473)      -- Holy Shock
+
+		-- Cures
+		AddSpell(1152)       -- Purify
+		AddSpell(4987)       -- Cleanse
+
+		-- Buffs
+		AddSpell(19740)      -- Blessing of Might
+		AddSpell(19742)      -- Blessing of Wisdom
+		AddSpell(19977)      -- Blessing of Light
 		AddSpell(1022)       -- Blessing of Protection
 		AddSpell(1044)       -- Blessing of Freedom
 		AddSpell(1038)       -- Blessing of Salvation
@@ -180,6 +205,9 @@ function Healium_InitSpells(class, race)
 		AddSpell(25890)      -- Greater Blessing of Light
 		AddSpell(25895)      -- Greater Blessing of Salvation
 		AddSpell(25898)      -- Greater Blessing of Kings
+
+		-- Other
+		AddSpell(7328)       -- Redemption
 		
 		-- Paladin Purify
 		CureName = Healium_GetSpellName(1152)
@@ -202,7 +230,14 @@ function Healium_InitSpells(class, race)
 	end
 	
 	if (class == "MAGE") then
+		-- Heals
+
+		-- Cures
 		AddSpell(475) -- Remove Curse
+
+		-- Buffs
+
+		-- Other
 
 		CureName = Healium_GetSpellName(475)
 		if CureName then 
@@ -213,18 +248,25 @@ function Healium_InitSpells(class, race)
 	end
 	
 	if (class == "EVOKER") then
+		-- Heals
 		AddSpell(364343) -- Echo
 		AddSpell(360995) -- Verdant Embrace
 		AddSpell(355913) -- Emerald Blossom
 		AddSpell(361469) -- Living Flame
 		AddSpell(355936) -- Dream Breath
-		AddSpell(360823) -- Naturalize
-		AddSpell(361227) -- Return 
-		AddSpell(365585) -- Expunge
-		AddSpell(374251) -- Cauterizing Flame
 		AddSpell(367226) -- Spiritbloom
 		AddSpell(367364) -- Reversion
+
+		-- Cures
+		AddSpell(360823) -- Naturalize
+		AddSpell(365585) -- Expunge
+		AddSpell(374251) -- Cauterizing Flame
+
+		-- Buffs
 		AddSpell(357170) -- Time Dilation
+
+		-- Other
+		AddSpell(361227) -- Return
 		AddSpell(370665) -- Rescue
 	
 		-- Naturalize
@@ -257,15 +299,22 @@ function Healium_InitSpells(class, race)
 	end	
 
 	if (class == "MONK") then
+		-- Heals
 		AddSpell(116694) 	-- Surging Mist
 		AddSpell(115175)	-- Soothing Mist
 		AddSpell(115151)	-- Renewing Mist
-		AddSpell(116841)	-- Tiger's Lust
-		AddSpell(116849)	-- Life Cocoon
 		AddSpell(124682) 	-- Enveloping Mist
 --		AddSpell(115310)	-- Revival (has cures, but is AOE)
 		AddSpell(116670)	-- Vivify
+
+		-- Cures
 		AddSpell(115450)	-- Detox 		
+
+		-- Buffs
+		AddSpell(116841)	-- Tiger's Lust
+		AddSpell(116849)	-- Life Cocoon
+
+		-- Other
 		AddSpell(115178)	-- Resuscitate (rez)
 --		AddSpell(124081)	-- zen pulse now a passive
 		AddSpell(197945)	-- mistwalk	
@@ -282,10 +331,18 @@ function Healium_InitSpells(class, race)
 	end
 
 	if (class == "DEATHKNIGHT") then
+		-- Heals
+
+		-- Cures
+
+		-- Buffs
+
+		-- Other
 		AddSpell(61999) 		-- Raise Ally (battle rez)
 	end
 	
 	if (race == "Draenei") then -- race isn't in all uppercase like class
+		-- Heals (racial)
 		AddSpell(59547)		-- Gift of the Naaru
 	end
 	
