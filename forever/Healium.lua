@@ -239,8 +239,8 @@ function Healium_Warn(msg)
 end
 
 function Healium_GetSpecialization()
-	if type(_G.GetSpecialization) == "function" then
-		return _G.GetSpecialization() or 1
+	if _G.C_SpecializationInfo and type(_G.C_SpecializationInfo.GetActiveSpecGroup) == "function" then
+		return _G.C_SpecializationInfo.GetActiveSpecGroup() or 1
 	end
 
 	return 1

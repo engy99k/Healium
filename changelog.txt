@@ -1,3 +1,6 @@
+3.6.3 Beta
+* Forever: Added support for separate Primary and Secondary talent-group profiles.
+
 3.6.2 Beta
 * Forever: Reordered the default class spell lists into heals, cures, buffs, and other abilities.
 
