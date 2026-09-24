@@ -8,7 +8,13 @@ local CuresCount = 0
 
 local function AddSpell(spellID)
 	local name = Healium_GetSpellName(spellID)
-	table.insert(Healium_Spell.Name, name)
+	if not name then return end
+
+	for _, existingName in ipairs(Healium_Spell.CatalogNames) do
+		if existingName == name then return end
+	end
+
+	table.insert(Healium_Spell.CatalogNames, name)
 end
 
 local function Count(tab)
@@ -27,6 +33,7 @@ function Healium_InitSpells(class, race)
 	local CureName
 	
 	-- clear cures
+	Healium_Spell.CatalogNames = {}
 	Healium_Spell.Name = {}
 	Healium_Spell.Icon = {}
 	Healium_Spell.ID = {}
@@ -38,6 +45,28 @@ function Healium_InitSpells(class, race)
 	
 		if Healium_IsClassic or Healium_IsClassicBCC then 
 			-- classic 
+
+			if Healium_UsesRankedSpellPicker then
+				-- Heals
+				AddSpell(5185)  -- Healing Touch
+				AddSpell(774)   -- Rejuvenation
+				AddSpell(8936)  -- Regrowth
+				AddSpell(18562) -- Swiftmend
+				if Healium_IsClassicBCC then
+					AddSpell(33763) -- Lifebloom
+				end
+
+				-- Cures
+				AddSpell(8946)  -- Cure Poison
+				AddSpell(2782)  -- Remove Curse
+				AddSpell(2893)  -- Abolish Poison
+
+				-- Buffs and other friendly abilities
+				AddSpell(1126)  -- Mark of the Wild
+				AddSpell(21849) -- Gift of the Wild
+				AddSpell(29166) -- Innervate
+				AddSpell(20484) -- Rebirth
+			end
 			
 			--Druid Remove Curse, classic version
 			CureName = Healium_GetSpellName(2782) 
@@ -62,17 +91,46 @@ function Healium_InitSpells(class, race)
 					CanCurePoison = true,
 				}
 			end
-		elseif Healium_IsClassicCata then
-			-- Cata
-			-- Druid Remove Corruption
-			CureName = Healium_GetSpellName(2782) 
-			if CureName then 
-				Cures[CureName] = { 
-					CanCureCurse = true,
+		elseif Healium_IsClassicMists then
+			-- Heals
+			AddSpell(774)    -- Rejuvenation
+			AddSpell(5185)   -- Healing Touch
+			AddSpell(8936)   -- Regrowth
+			AddSpell(33763)  -- Lifebloom
+			AddSpell(50464)  -- Nourish
+			AddSpell(18562)  -- Swiftmend
+			AddSpell(48438)  -- Wild Growth
+			AddSpell(102351) -- Cenarion Ward
+
+			-- Cures
+			AddSpell(2782)  -- Remove Corruption
+			AddSpell(88423) -- Nature's Cure
+
+			-- Buffs
+			AddSpell(1126)   -- Mark of the Wild
+			AddSpell(29166)  -- Innervate
+			AddSpell(102342) -- Ironbark
+
+			-- Other
+			AddSpell(50769) -- Revive
+			AddSpell(20484) -- Rebirth
+
+			CureName = Healium_GetSpellName(2782)
+			if CureName then
+				Cures[CureName] = {
 					CanCurePoison = true,
-					CanCureMagic = IsPlayerSpell(88423) -- Druid Nature's Cure Talen -- Empowers your Remove Corruption spell to also remove a magic effect from a friendly target.
+					CanCureCurse = true,
 				}
-			end		
+			end
+
+			CureName = Healium_GetSpellName(88423)
+			if CureName then
+				Cures[CureName] = {
+					CanCurePoison = true,
+					CanCureCurse = true,
+					CanCureMagic = true,
+				}
+			end
 		else
 			-- retail
 			AddSpell(774)		-- Rejuvenation
@@ -117,6 +175,41 @@ function Healium_InitSpells(class, race)
 	
 		if Healium_IsClassic or Healium_IsClassicBCC then 
 			-- classic
+
+			if Healium_UsesRankedSpellPicker then
+				-- Heals
+				AddSpell(2050)  -- Lesser Heal
+				AddSpell(139)   -- Renew
+				AddSpell(2054)  -- Heal
+				AddSpell(2061)  -- Flash Heal
+				AddSpell(2060)  -- Greater Heal
+				AddSpell(596)   -- Prayer of Healing
+				if Healium_IsClassicBCC then
+					AddSpell(32546) -- Binding Heal
+					AddSpell(33076) -- Prayer of Mending
+					AddSpell(34861) -- Circle of Healing
+				end
+
+				-- Cures
+				AddSpell(528)   -- Cure Disease
+				AddSpell(552)   -- Abolish Disease
+				AddSpell(527)   -- Dispel Magic
+
+				-- Buffs and other friendly abilities
+				AddSpell(17)    -- Power Word: Shield
+				AddSpell(1243)  -- Power Word: Fortitude
+				AddSpell(14752) -- Divine Spirit
+				AddSpell(21562) -- Prayer of Fortitude
+				AddSpell(27681) -- Prayer of Spirit
+				AddSpell(976)   -- Shadow Protection
+				AddSpell(27683) -- Prayer of Shadow Protection
+				AddSpell(10060) -- Power Infusion
+				if Healium_IsClassicBCC then
+					AddSpell(33206) -- Pain Suppression
+					AddSpell(6346)  -- Fear Ward
+				end
+				AddSpell(2006)  -- Resurrection
+			end
 			
 			-- Priest Dispel Magic, classic version
 			CureName = Healium_GetSpellName(527)
@@ -141,32 +234,51 @@ function Healium_InitSpells(class, race)
 					CanCureDisease = true, 
 				}
 			end			
-		elseif Healium_IsClassicCata then
-			-- Cata
-			
-			-- Priest Dispel Magic
+		elseif Healium_IsClassicMists then
+			-- Heals
+			AddSpell(139)    -- Renew
+			AddSpell(2061)   -- Flash Heal
+			AddSpell(2050)   -- Heal
+			AddSpell(2060)   -- Greater Heal
+			AddSpell(32546)  -- Binding Heal
+			AddSpell(596)    -- Prayer of Healing
+			AddSpell(33076)  -- Prayer of Mending
+			AddSpell(34861)  -- Circle of Healing
+			AddSpell(47540)  -- Penance
+			AddSpell(121135) -- Cascade
+			AddSpell(110744) -- Divine Star
+			AddSpell(120517) -- Halo
+
+			-- Cures
+			AddSpell(527)   -- Purify
+			AddSpell(32375) -- Mass Dispel
+
+			-- Buffs
+			AddSpell(17)     -- Power Word: Shield
+			AddSpell(21562)  -- Power Word: Fortitude
+			AddSpell(10060)  -- Power Infusion
+			AddSpell(33206)  -- Pain Suppression
+			AddSpell(47788)  -- Guardian Spirit
+			AddSpell(109964) -- Spirit Shell
+
+			-- Other
+			AddSpell(2006)  -- Resurrection
+			AddSpell(73325) -- Leap of Faith
+
 			CureName = Healium_GetSpellName(527)
-			if CureName then 
-				Cures[CureName] = { 
-					CanCureMagic = true, 
+			if CureName then
+				Cures[CureName] = {
+					CanCureDisease = true,
+					CanCureMagic = true,
 				}
-			end				
-			
-			-- Priest Cure Disease
-			CureName = Healium_GetSpellName(528)
-			if CureName then 
-				Cures[CureName] = { 
-					CanCureDisease = true, 
-				}
-			end				
-			
-			-- Priest Mass Dispel
+			end
+
 			CureName = Healium_GetSpellName(32375)
-			if CureName then 
-				Cures[CureName] = { 
-					CanCureMagic = true, 
+			if CureName then
+				Cures[CureName] = {
+					CanCureMagic = true,
 				}
-			end		
+			end
 		else
 			-- retail
 			AddSpell(527)		-- Purify		
@@ -214,9 +326,29 @@ function Healium_InitSpells(class, race)
 		
 		if Healium_IsClassic or Healium_IsClassicBCC then 
 			-- classic
+
+			if Healium_UsesRankedSpellPicker then
+				-- Heals
+				AddSpell(331)  -- Healing Wave
+				AddSpell(8004) -- Lesser Healing Wave
+				AddSpell(1064) -- Chain Heal
+				if Healium_IsClassicBCC then
+					AddSpell(974) -- Earth Shield
+				end
+
+				-- Cures
+				AddSpell(526)  -- Cure Poison
+				AddSpell(2870) -- Cure Disease
+
+				-- Buffs
+				AddSpell(131)  -- Water Breathing
+				AddSpell(546)  -- Water Walking
+
+				-- Other
+				AddSpell(2008) -- Ancestral Spirit
+			end
 			
-			-- Shaman Cleanse Spirit, in WOTLK but not classic. Retail only cures curses.
-			-- https://www.wowhead.com/wotlk/spell=51886/cleanse-spirit
+			-- Cleanse Spirit is unavailable in Vanilla and Burning Crusade.
 			--CureName = Healium_GetSpellName(51886)
 			--if CureName then 
 			--	Cures[CureName] = { 
@@ -241,18 +373,36 @@ function Healium_InitSpells(class, race)
 					CanCureDisease = true,
 				}
 			end	
-		elseif Healium_IsClassicCata then
-			-- Cata
-			
-			-- Shaman Cleanse Spirit 
+		elseif Healium_IsClassicMists then
+			-- Heals
+			AddSpell(331)   -- Healing Wave
+			AddSpell(8004)  -- Healing Surge
+			AddSpell(77472) -- Greater Healing Wave
+			AddSpell(1064)  -- Chain Heal
+			AddSpell(61295) -- Riptide
+			AddSpell(974)   -- Earth Shield
+
+			-- Cures
+			AddSpell(51886) -- Cleanse Spirit
+			AddSpell(77130) -- Purify Spirit
+
+			-- Other
+			AddSpell(2008) -- Ancestral Spirit
+
 			CureName = Healium_GetSpellName(51886)
-			if CureName then 
-				Cures[CureName] = { 
+			if CureName then
+				Cures[CureName] = {
 					CanCureCurse = true,
-					CanCureMagic = IsPlayerSpell(77130) -- ** Improved Cleanse Spirit  (talent) Empowers cleanse spirit to also removed magic effect			
 				}
-			end					
-	
+			end
+
+			CureName = Healium_GetSpellName(77130)
+			if CureName then
+				Cures[CureName] = {
+					CanCureCurse = true,
+					CanCureMagic = true,
+				}
+			end
 		else
 			-- retail
 			AddSpell(51886)		-- Cleanse Spirit	
@@ -288,6 +438,37 @@ function Healium_InitSpells(class, race)
 	if (class == "PALADIN") then
 		if Healium_IsClassic or Healium_IsClassicBCC then 
 			-- classic
+
+			if Healium_UsesRankedSpellPicker then
+				-- Heals
+				AddSpell(635)   -- Holy Light
+				AddSpell(19750) -- Flash of Light
+				AddSpell(633)   -- Lay on Hands
+				AddSpell(20473) -- Holy Shock
+
+				-- Cures
+				AddSpell(1152)  -- Purify
+				AddSpell(4987)  -- Cleanse
+
+				-- Blessings and other friendly abilities
+				AddSpell(19740) -- Blessing of Might
+				AddSpell(19742) -- Blessing of Wisdom
+				AddSpell(19977) -- Blessing of Light
+				AddSpell(1022)  -- Blessing of Protection
+				AddSpell(1044)  -- Blessing of Freedom
+				AddSpell(1038)  -- Blessing of Salvation
+				AddSpell(6940)  -- Blessing of Sacrifice
+				AddSpell(20217) -- Blessing of Kings
+				AddSpell(20911) -- Blessing of Sanctuary
+				AddSpell(25782) -- Greater Blessing of Might
+				AddSpell(25894) -- Greater Blessing of Wisdom
+				AddSpell(25890) -- Greater Blessing of Light
+				AddSpell(25895) -- Greater Blessing of Salvation
+				AddSpell(25898) -- Greater Blessing of Kings
+				AddSpell(25899) -- Greater Blessing of Sanctuary
+				AddSpell(19752) -- Divine Intervention
+				AddSpell(7328)  -- Redemption
+			end
 	
 			-- Paladin Purify -- classic only
 			CureName = Healium_GetSpellName(1152)
@@ -297,18 +478,43 @@ function Healium_InitSpells(class, race)
 					CanCureDisease = true,		
 				}		
 			end
-		elseif Healium_IsClassicCata then
-			-- Cata
-			
-			-- Paladin Cleanse
+		elseif Healium_IsClassicMists then
+			-- Heals
+			AddSpell(85673)  -- Word of Glory
+			AddSpell(19750)  -- Flash of Light
+			AddSpell(635)    -- Holy Light
+			AddSpell(82326)  -- Divine Light
+			AddSpell(20473)  -- Holy Shock
+			AddSpell(82327)  -- Holy Radiance
+			AddSpell(85222)  -- Light of Dawn
+			AddSpell(633)    -- Lay on Hands
+			AddSpell(114163) -- Eternal Flame
+			AddSpell(114165) -- Holy Prism
+			AddSpell(114916) -- Execution Sentence
+
+			-- Cures
+			AddSpell(4987) -- Cleanse
+
+			-- Buffs
+			AddSpell(53563)  -- Beacon of Light
+			AddSpell(20925)  -- Sacred Shield
+			AddSpell(1022)   -- Hand of Protection
+			AddSpell(1038)   -- Hand of Salvation
+			AddSpell(1044)   -- Hand of Freedom
+			AddSpell(6940)   -- Hand of Sacrifice
+			AddSpell(114039) -- Hand of Purity
+
+			-- Other
+			AddSpell(7328) -- Redemption
+
 			CureName = Healium_GetSpellName(4987)
-			if CureName then 
+			if CureName then
 				Cures[CureName] = {
-					CanCurePoison = true, 
-					CanCureDisease = true,		
-					CanCureMagic = IsPlayerSpell(53551) -- Sacred Cleansing (talnet) - magic **Your cleanse spell now removes magic	
-				}		
-			end			
+					CanCurePoison = true,
+					CanCureDisease = true,
+					CanCureMagic = true,
+				}
+			end
 		else
 			-- Retail
 			AddSpell(19750) -- Flash of Light
@@ -359,6 +565,11 @@ function Healium_InitSpells(class, race)
 	if (class == "MAGE") then
 		if Healium_IsClassic or Healium_IsClassicBCC then 
 			-- classic
+			if Healium_UsesRankedSpellPicker then
+				AddSpell(475)  -- Remove Lesser Curse
+				AddSpell(1008) -- Amplify Magic
+				AddSpell(604)  -- Dampen Magic
+			end
 			-- Mage Remove Lesser Curse -- classic only
 			CureName = Healium_GetSpellName(475)
 			if CureName then 
@@ -375,14 +586,16 @@ function Healium_InitSpells(class, race)
 					CanCureMagic = true,
 				}
 			end
-		elseif Healium_IsClassicCata then
-			-- Cata
+		elseif Healium_IsClassicMists then
+			-- Cures
+			AddSpell(475) -- Remove Curse
+
 			CureName = Healium_GetSpellName(475)
-			if CureName then 
-				Cures[CureName] = {	
-					CanCureCurse = true, 
+			if CureName then
+				Cures[CureName] = {
+					CanCureCurse = true,
 				}
-			end		
+			end
 		else
 			-- Retail
 			AddSpell(475) -- Remove Curse
@@ -466,6 +679,25 @@ function Healium_InitSpells(class, race)
 				}
 			end
 		elseif Healium_IsClassicMists then
+			-- Heals
+			AddSpell(115175) -- Soothing Mist
+			AddSpell(116694) -- Surging Mist
+			AddSpell(115151) -- Renewing Mist
+			AddSpell(124682) -- Enveloping Mist
+			AddSpell(115098) -- Chi Wave
+			AddSpell(124081) -- Zen Sphere
+			AddSpell(123986) -- Chi Burst
+
+			-- Cures
+			AddSpell(115450) -- Detox
+
+			-- Buffs
+			AddSpell(116841) -- Tiger's Lust
+			AddSpell(116849) -- Life Cocoon
+
+			-- Other
+			AddSpell(115178) -- Resuscitate
+
 			-- Monk Detox
 			CureName = Healium_GetSpellName(115450)		
 			if CureName then 
@@ -487,6 +719,14 @@ function Healium_InitSpells(class, race)
 		if (race == "Draenei") then -- race isn't in all uppercase like class
 			AddSpell(59547)		-- Gift of the Naaru
 		end
+	end
+
+	if Healium_IsClassicMists and class == "DEATHKNIGHT" then
+		AddSpell(61999) -- Raise Ally
+	end
+
+	if Healium_IsClassicBCC and race == "Draenei" then
+		AddSpell(28880) -- Gift of the Naaru
 	end
 	
 	CuresCount = Count(Cures)

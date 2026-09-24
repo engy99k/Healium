@@ -33,6 +33,10 @@ function Healium_HealButton_OnEnter(frame, motion)
 		end
 		local Profile = Healium_GetProfile()
 		local rank = Profile.SpellRanks[frame.index]
+		if Healium_UsesRankedSpellPicker and not rank then
+			local _, highestRank = GetSpellBookItemName(frame.id, BOOKTYPE_SPELL)
+			rank = highestRank ~= "" and highestRank or nil
+		end
 		if rank then 
 			GameTooltip:AddLine(Healium_AddonColor .. rank .. "|r",1,1,1)
 		end

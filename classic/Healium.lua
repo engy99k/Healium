@@ -6,7 +6,7 @@
 -- To get the wow interface number use /run print((select(4, GetBuildInfo())))
 -- Interface folders:
 -- _classic_era_ = Classic
--- _classic_ = Cata Classic, used to be LK Classic
+-- _classic_ = Classic-family clients
 -- _retail_ = mainline 
 
 Healium_Debug = false
@@ -31,10 +31,11 @@ local stable
 -- Global Constants
 Healium_IsClassic = _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CLASSIC
 Healium_IsClassicBCC = _G.WOW_PROJECT_ID == _G.WOW_PROJECT_BURNING_CRUSADE_CLASSIC
-Healium_IsClassicLK = _G.WOW_PROJECT_ID == _G.WOW_PROJECT_WRATH_CLASSIC
-Healium_IsClassicCata = _G.WOW_PROJECT_ID == _G.WOW_PROJECT_CATACLYSM_CLASSIC
 Healium_IsClassicMists = _G.WOW_PROJECT_ID == _G.WOW_PROJECT_MISTS_CLASSIC
 Healium_IsRetail = _G.WOW_PROJECT_ID == _G.WOW_PROJECT_MAINLINE
+-- Vanilla and Burning Crusade have spell ranks. Menu selections use the highest learned rank,
+-- while dragging a spell from the spellbook can assign a specific lower rank.
+Healium_UsesRankedSpellPicker = Healium_IsClassic or Healium_IsClassicBCC
 Healium_MaxButtons = 15		-- Max Possible buttons 
 Healium_AddonName = "Healium"
 Healium_AddonColor = "|cFF55AAFF"
@@ -146,7 +147,8 @@ These only contain specifically selected spells in HealiumSpells.lua
 The Name gets filled in in Healium_InitSpells(). Healium_UpdateSpells() will fill in the ID and Icon if
 the player actually has the spell.
 --]]
-Healium_Spell = {		
+Healium_Spell = {
+  CatalogNames = {},
   Name = {},
   Icon = {},
   ID = {} -- This is the spell SlotID (spellbook index), not the global SpellID
@@ -696,13 +698,16 @@ local function GetSpellSlotID(spell, subtext)
 	--This is required because spells for other specs appear in the spell book and are disabled, and we don't want disabled spells appearing by default.
 	--GetSpellInfo() will return nil for those disabled spells. 
 	--Warning passing an index to GetSpellInfo() will still return a name for disabled spells, but passing the spell name causes it to return nil
-	local name = Healium_GetSpellName(spell)
-	if not name then
-		return nil
+	if not Healium_UsesRankedSpellPicker then
+		local name = Healium_GetSpellName(spell)
+		if not name then
+			return nil
+		end
 	end
 
 	Healium_DebugPrint("GetSpellSlotID: ", spell);	
 	local count = GetSpellCount()
+	local highestRankSlot
 	
 	for i = 1, count do
         local spellName, spellSubName 
@@ -733,7 +738,13 @@ local function GetSpellSlotID(spell, subtext)
 			Healium_DebugPrint("spell: ", spellName, "subtext:", spellSubName);
 			
 			if not subtext then
-				return i
+				if Healium_UsesRankedSpellPicker then
+					-- Ranked Classic spellbooks are ordered from lowest to highest.
+					-- Keep scanning so picker selections follow newly learned ranks.
+					highestRankSlot = i
+				else
+					return i
+				end
 			end
 			
 			if spellSubName == subtext then
@@ -746,27 +757,24 @@ local function GetSpellSlotID(spell, subtext)
         end
     end
 	
-    return nil
+	return highestRankSlot
 end
 
 -- Loops through Healium_Spell.Name[] and updates it's corresponding .ID[] and .Icon[]
 -- Warning UpdateSpells() is a global function from Blizzard. 
 local function Healium_UpdateSpells()
-	for k, v in ipairs (Healium_Spell.Name) do
-		Healium_Spell.ID[k] = GetSpellSlotID(Healium_Spell.Name[k])
-		if (Healium_Spell.ID[k]) then
-			if Healium_IsRetail then
-				Healium_Spell.Icon[k] = C_Spell.GetSpellTexture(Healium_Spell.Name[k])
-			else
-				Healium_Spell.Icon[k] = GetSpellTexture(Healium_Spell.ID[k], BOOKTYPE_SPELL)
-			end
-			Healium_DebugPrint("Found ID for Spell Name: " .. Healium_Spell.Name[k] .. " ID:" .. Healium_Spell.ID[k])
-			Healium_DebugPrint("Texture: " .. Healium_Spell.Icon[k])							
-		else 
-			Healium_DebugPrint("Could not find ID, Spell Name: ", Healium_Spell.Name[k])							
-			Healium_Spell.Icon[k] = nil
+	Healium_Spell.Name = {}
+	Healium_Spell.Icon = {}
+	Healium_Spell.ID = {}
+
+	for _, spellName in ipairs(Healium_Spell.CatalogNames) do
+		local slotID = GetSpellSlotID(spellName)
+		if slotID then
+			table.insert(Healium_Spell.Name, spellName)
+			table.insert(Healium_Spell.ID, slotID)
+			table.insert(Healium_Spell.Icon, GetSpellTexture(slotID, BOOKTYPE_SPELL) or GetSpellTexture(spellName) or false)
 		end
-	end 
+	end
 	
 	Healium_UpdateButtonAttributes()
 end
@@ -1331,6 +1339,8 @@ function Healium_OnEvent(frame, event, ...)
 	if ((event == "PLAYER_ENTERING_WORLD") and (not frame.Respecing)) then
 		stable = true
 		Healium_DebugPrint("PLAYER_ENTERING_WORLD")
+		-- Spell information may not be ready yet during ADDON_LOADED.
+		Healium_InitSpells(HealiumClass, HealiumRace)
 		-- Populate the Healium_Spell Table with ID and Icon data.
 		Healium_UpdateSpells()
 	end

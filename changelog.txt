@@ -1,3 +1,10 @@
+3.7.0
+* All Classics: Added class-appropriate spell lists to the button configuration menus.
+* Vanilla Classic and Classic BC: Menu selections use the highest learned spell rank; drag-and-drop can assign a specific lower rank.
+* All Classics: Added Button Profiles and Frame Layouts.
+* All Classics: Improved the minimap button appearance.
+* Removed obsolete Wrath and Cataclysm Classic support.
+
 3.6.3 Beta
 * Forever: Added support for separate Primary and Secondary talent-group profiles.
 

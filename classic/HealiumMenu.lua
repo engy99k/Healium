@@ -53,7 +53,15 @@ local function SetCurrentSpell(info, btnIndex, spellIndex)
 	if CanConfigureButtons() == false then return end
 	
 	local Profile = Healium_GetProfile()
-	Healium_SetProfileSpell(Profile, btnIndex, Healium_Spell.Name[spellIndex], Healium_Spell.ID[spellIndex], Healium_Spell.Icon[spellIndex])
+	if not spellIndex then
+		Healium_SetProfileSpell(Profile, btnIndex, nil, nil, nil, nil)
+		Healium_Update_ConfigPanel()
+		Healium_UpdateButtonIcons()
+		Healium_UpdateButtonAttributes()
+		return
+	end
+
+	Healium_SetProfileSpell(Profile, btnIndex, Healium_Spell.Name[spellIndex], Healium_Spell.ID[spellIndex], Healium_Spell.Icon[spellIndex] or nil)
 	
 	Healium_Update_ConfigPanel()
 	Healium_UpdateButtonIcons()
@@ -360,35 +368,29 @@ local function HealiumMenu_InitializeDropDown(frame,level)
 
 	local currentSpell = Profile.SpellNames[index]
 	
-	if Healium_IsRetail then 
-		for k, v in ipairs (Healium_Spell.Name) do
-			local spellmenuItem = { }
-			spellmenuItem.text = Healium_Spell.Name[k]
-			spellmenuItem.func = SetCurrentSpell
-			spellmenuItem.icon = Healium_Spell.Icon[k]
-			spellmenuItem.checked = currentSpell == Healium_Spell.Name[k]
-			spellmenuItem.arg1 = index
-			spellmenuItem.arg2 = k
-			
-			if (spellmenuItem.icon) then
-				table.insert(spells, spellmenuItem)
-			end
-		end
+	for k, v in ipairs (Healium_Spell.Name) do
+		local spellmenuItem = { }
+		spellmenuItem.text = Healium_Spell.Name[k]
+		spellmenuItem.func = SetCurrentSpell
+		spellmenuItem.icon = Healium_Spell.Icon[k] or nil
+		spellmenuItem.checked = currentSpell == Healium_Spell.Name[k]
+		spellmenuItem.arg1 = index
+		spellmenuItem.arg2 = k
+
+		table.insert(spells, spellmenuItem)
 	end
 
 	-- Add No Spell, Insert Button, and Delete Button
 	cmds = {}
 	
-	if Healium_IsRetail then 
-		local noSpell = 
-		{
-			text = "No Spell",
-			func = SetCurrentSpell,
-			checked = currentSpell == nil,
-			arg1 = index,
-		}
-		table.insert(cmds, noSpell)
-	end
+	local noSpell = {
+		text = "No Spell",
+		func = SetCurrentSpell,
+		checked = currentSpell == nil,
+		arg1 = index,
+		arg2 = nil,
+	}
+	table.insert(cmds, noSpell)
 		
 	local insert = 
 	{

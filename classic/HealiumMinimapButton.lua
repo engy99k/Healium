@@ -6,7 +6,15 @@ function Healium_CreateMiniMapButton()
 
   button.icon = button:CreateTexture("icon","BACKGROUND")
   button.overlay = button:CreateTexture("icon","OVERLAY")
-  button.icon:SetAllPoints()
+  button.icon:SetPoint("CENTER", button, "CENTER")
+  button.icon:SetSize(24, 24)
+  -- Classic's version of this icon is already tightly framed; unlike Retail,
+  -- cropping its edges makes the artwork appear overly zoomed.
+  button.icon:SetTexCoord(0, 1, 0, 1)
+  local iconMask = button:CreateMaskTexture()
+  iconMask:SetTexture("Interface/CharacterFrame/TempPortraitAlphaMask")
+  iconMask:SetAllPoints(button.icon)
+  button.icon:AddMaskTexture(iconMask)
   button.overlay:SetAllPoints()
 
   local highlight = button:CreateTexture(nil, "HIGHLIGHT")
