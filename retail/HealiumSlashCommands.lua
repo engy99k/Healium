@@ -25,9 +25,8 @@ local function printUsage()
 	Healium_Print(Healium_Slash .. " friends remove [name or Target] - Removes name from the " .. Healium_AddonName .. " friends list.")		
 	Healium_Print(Healium_Slash .. " friends show - Shows the current " .. Healium_AddonName .. " friends list.")			
 	Healium_Print(Healium_Slash .. " friends clear - clears the " .. Healium_AddonName .. " friends list.")				
---		Healium_Print(Slash .. " reset - Resets the ".. Healium_AddonName .. " UI")
---		DEFAULT_CHAT_FRAME:AddMessage(Slash .. " debug - Toggles " .. Healium_AddonName .. " debugging")
---		DEFAULT_CHAT_FRAME:AddMessage(Slash .. " dump - Outputs " .. Healium_AddonName .. " variables for debugging purposes")
+	Healium_Print(Healium_Slash .. " debug - Toggles " .. Healium_AddonName .. " debug output, useful when reporting a problem.")
+	Healium_Print(Healium_Slash .. " dump - Prints the saved " .. Healium_AddonName .. " settings.")
 end
 
 -- handles /hlm reset 
@@ -136,10 +135,16 @@ local function GetFriendsTarget(args)
 	if args == nil then
 		local realm
 		friend, realm  = UnitName("Target")
-		if realm ~= nil then
-			if realm:len() > 0 then
-				friend = friend .. "-" .. realm
-			end
+
+		-- A secret name cannot be stored or compared, so there is nothing
+		-- usable to add to the friends list.
+		if Healium_IsSecret(friend) then
+			Healium_Warn("That unit's name is not available right now.")
+			return nil
+		end
+
+		if realm ~= nil and not Healium_IsSecret(realm) and realm:len() > 0 then
+			friend = friend .. "-" .. realm
 		end
 	end
 	
